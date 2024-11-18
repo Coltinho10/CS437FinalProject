@@ -39,9 +39,11 @@ python3 flask_server.py
 ```
 The server will be accessible at http://localhost:5000. You can visit this address in your browser to see the real-time soil sensor data visualization.
 
-Access the Web UI: Navigate to http://localhost:8000 in your browser. This page will visualize the sensor's data and display the real-time readings of your soil sensor.
+Access the Web UI: Navigate to http://localhost:5000 in your browser. This page will visualize the sensor's data and display the real-time readings of your soil sensor.
 
-File Structure
+To view the JSON records of each of the different sensor navigate to http://localhost:5000/{feed}
+
+## File Structure
 ```
 CS437FinalProject/
 ├── flask_server.py         # Flask backend server script
