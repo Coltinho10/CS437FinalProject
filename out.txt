@@ -1,0 +1,3 @@
+. venv/bin/activate && python run.py
+Database URI: sqlite:////Users/coltonbailey/Desktop/GradSchool/IoT/FinalProject/CS437FinalProject/app/instance/project.db
+Creating tables...
