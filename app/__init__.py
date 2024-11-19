@@ -1,12 +1,11 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from . import config  # Import configurations
-from .routes import init_routes  # Import init_routes function
-from app.models import User
+from . import config
+from .routes import init_routes
+from .models import db, User
 
 # Initialize extensions
-db = SQLAlchemy()
 login_manager = LoginManager()
 
 @login_manager.user_loader
@@ -17,7 +16,6 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(config.Config)
 
-    # Initialize extensions with the app
     db.init_app(app)
     login_manager.init_app(app)
 
