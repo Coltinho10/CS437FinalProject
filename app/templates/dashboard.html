@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</head>
+
+<body>
+    <div class="container">
+
+        <h1>Your SoilSensor Setups</h1>
+
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSetupModal">
+            Add Setup
+        </button> {% if setups %}
+        <ul class="list-group">
+            {% for setup in setups %}
+            <li class="list-group-item">{{ setup.name }} (Capacitive Sensor: {{ setup.capacitive_sensor_key }})</li>
+
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No setups found. Create a new setup.</p>
+        {% endif %}
+        <div class="modal fade" id="addSetupModal" tabindex="-1" aria-labelledby="addSetupModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addSetupModalLabel">Add New Setup</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="{{ url_for('add_setup') }}" method="POST">
+                            <div class="mb-3">
+                                <label for="setupName" class="form-label">Setup Name</label>
+                                <input type="text" class="form-control" id="setupName" name="name" required>
+                                <label for="capacitiveSensorKey" class="form-label">Capacative Sensor Key</label>
+                                <input type="text" class="form-control" id="capacitiveSensorKey" name="CSKey" required>
+                                <label for="temperatureSensorKey" class="form-label">Temperature Sensor Key</label>
+                                <input type="text" class="form-control" id="temperatureSensorKey" name="TSKey" required>
+                                <label for="lightSensorKey" class="form-label">Light Sensor Key</label>
+                                <input type="text" class="form-control" id="lightSensorKey" name="LSKey" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add Setup</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</body>
+
+</html>

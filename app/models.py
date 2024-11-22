@@ -1,16 +1,25 @@
-
 from flask import current_app as app
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin
 
-# Initialize the database outside of any specific model
 db = SQLAlchemy()
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    adafruit_username = db.Column(db.String(100))
+    adafruit_aio_key = db.Column(db.String(100))
 
-class SensorData(db.Model):
+    def __repr__(self):
+        return f'<User {self.username}>'
+
+class SoilSensorSetup(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    timestamp = db.Column(db.DateTime, nullable=False)
-    value = db.Column(db.Float, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    capacitive_sensor_key = db.Column(db.String(100))
+    temperature_sensor_key = db.Column(db.String(100))
+    light_sensor_key = db.Column(db.String(100))
+
+    user = db.relationship('User', backref=db.backref('soil_sensor_setups', lazy=True))
