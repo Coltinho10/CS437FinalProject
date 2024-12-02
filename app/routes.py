@@ -7,7 +7,8 @@ from .models import User, SoilSensorSetup
 from sqlalchemy.exc import IntegrityError
 from .forms import RegistrationForm, LoginForm, UserProfileForm
 import requests
-
+import plotly.graph_objects as go
+import plotly.express as px
 # Define login_manager user_loader
 def init_routes(app, db, login_manager):  # Accept db and login_manager as arguments
     @app.route('/')
@@ -35,7 +36,6 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
 
         return render_template('login.html', form=form)
 
-        return render_template('login.html')
 
     @app.route('/register', methods=['GET', 'POST'])
     def register():
@@ -102,53 +102,27 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
     @login_required
     def profile():
         form = UserProfileForm(obj=current_user)
-        if form.validate_on_submit():
-            form.populate_obj(current_user)
+        print(current_user)
+        print(current_user.password_hash)
+        #if form.validate_on_submit():
+        print("form.validate_on_submit")
+        #if check_password_hash(current_user.password_hash, form.current_password.data):
+        print("check_password_hash is true")
+        current_user.adafruit_username = form.adafruit_username.data
+        current_user.adafruit_aio_key = form.adafruit_aio_key.data
+        print(current_user.adafruit_username)
+        # Update user's password if provided
+        if form.new_password.data:
+            current_user.password_hash = generate_password_hash(form.new_password.data)
 
-            db.session.commit()
-            flash('Profile updated successfully!', 'success')
-            return redirect(url_for('profile'))
-
+        db.session.commit()
+        print('profile updated success')
+        flash('Profile updated successfully!', 'success')
+        #return redirect(url_for('profile'))
+        #else:
+        #    flash('Incorrect current password.', 'error')
         return render_template('profile.html', form=form)
 
-    @app.route('/api/sensor-data/<int:setup_id>')
-    @login_required
-    def get_sensor_data(setup_id):
-        setup = SoilSensorSetup.query.get_or_404(setup_id)
-        if setup.user_id != current_user.id:
-            abort(403)  # Unauthorized access
-
-        # Retrieve user's Adafruit IO credentials from the database
-        username = current_user.adafruit_username
-        aio_key = current_user.adafruit_aio_key
-
-        # Construct the base URL for API calls
-        base_url = f"https://io.adafruit.com/api/v2/{username}/feeds/"
-
-        # Fetch data for each sensor using their keys from the setup
-        capacitive_data = None
-        temperature_data = None
-        light_data = None
-
-        if setup.capacitive_sensor_key:
-            try:
-                url = base_url + setup.capacitive_sensor_key + '/data/last'
-                response = requests.get(url, headers={'Authorization': f'Bearer {aio_key}'})
-                response.raise_for_status()  # Raise exception for non-200 status codes
-                capacitive_data = response.json()
-            except requests.exceptions.RequestException as e:
-                print(f"Error fetching capacitive sensor data: {e}")
-
-        # TODO: similar code for temperature and light sensors
-
-        # Prepare the sensor data dictionary
-        sensor_data = {
-            'capacitive': capacitive_data,
-            'temperature': temperature_data,
-            'light': light_data,
-        }
-
-        return jsonify(sensor_data)
 
     @app.route('/add_setup', methods=['POST'])
     @login_required
@@ -158,9 +132,9 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
         temperature_sensor_key = request.form.get('TSKey')
         light_sensor_key = request.form.get('LSKey')
 
-        if not name or not capacitive_sensor_key or not temperature_sensor_key or not light_sensor_key:
-            flash('Please provide all required fields.', 'error')
-            return redirect(url_for('dashboard'))
+        #if not name or not capacitive_sensor_key or not temperature_sensor_key or not light_sensor_key:
+        #    flash('Please provide all required fields.', 'error')
+        #    return redirect(url_for('dashboard'))
 
         try:
             new_setup = SoilSensorSetup(
@@ -180,3 +154,66 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
             flash('An error occurred while adding the setup.', 'error')
 
         return redirect(url_for('dashboard'))
+    
+    def fetch_data_from_adafruit(feed_key):
+        user = User.query.get(current_user.id)
+        aio_key = user.adafruit_aio_key
+        url = f"https://io.adafruit.com/api/v2/{user.adafruit_username}/feeds/{feed_key}/data/"
+        headers = {"X-AIO-Key": aio_key}
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return jsonify({"error": "Failed to fetch data"}), 500
+
+    @app.route('/setup/<int:setup_id>')
+    @login_required
+    def setup_details(setup_id):
+        setup = SoilSensorSetup.query.get_or_404(setup_id)
+        return render_template('setup_details.html', setup=setup)
+
+    @app.route('/api/sensor-data/<int:setup_id>')
+    @login_required
+    def get_sensor_data(setup_id):
+        setup = SoilSensorSetup.query.get_or_404(setup_id)
+        if setup.user_id != current_user.id:
+            abort(403)  # Unauthorized access
+
+        # Retrieve user's Adafruit IO credentials from the database
+        username = current_user.adafruit_username
+        aio_key = current_user.adafruit_aio_key
+        #print(username)
+        #print(aio_key)
+        # Construct the base URL for API calls
+        base_url = f"https://io.adafruit.com/api/v2/{username}/feeds/"
+
+        # Fetch data for each sensor using their keys from the setup
+        try:
+            
+            capacitive_data = requests.get(
+                base_url + setup.capacitive_sensor_key + "/data",
+                headers={"X-AIO-Key": aio_key}
+            ).json() if setup.capacitive_sensor_key else None
+            #print(capacitive_data)
+            temperature_data = requests.get(
+                base_url + setup.temperature_sensor_key + "/data",
+                headers={"X-AIO-Key": aio_key}
+            ).json() if setup.temperature_sensor_key else None
+
+            light_data = requests.get(
+                base_url + setup.light_sensor_key + "/data",
+                headers={"X-AIO-Key": aio_key}
+            ).json() if setup.light_sensor_key else None
+
+        except requests.exceptions.RequestException as e:
+            print(f"Error fetching sensor data: {e}")
+            return jsonify({"error": "Failed to fetch sensor data"}), 500
+
+        # Prepare the sensor data dictionary
+        sensor_data = {
+            'capacitive': capacitive_data,
+            'temperature': temperature_data,
+            'light': light_data,
+        }
+
+        return jsonify(sensor_data)

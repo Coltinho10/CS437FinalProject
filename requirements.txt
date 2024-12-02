@@ -5,3 +5,5 @@ Werkzeug
 pandas
 flask-wtf
 requests
+plotly
+gunicorn
