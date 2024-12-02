@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</head>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('index') }}">SoilSensor</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('profile') }}">Profile</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    </div>
+</nav>
+
+<body>
+    <div class="container">
+
+        <h1>Your SoilSensor Setups</h1>
+
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSetupModal">
+            Add Setup
+        </button> {% if setups %}
+        <div class="row">
+            {% for setup in setups %}
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ setup.name }}</h5>
+                        <a href="{{ url_for('setup_details', setup_id=setup.id) }}" class="btn btn-primary">View Details</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p>No setups found. Create a new setup.</p>
+        {% endif %}
+        <div class="modal fade" id="addSetupModal" tabindex="-1" aria-labelledby="addSetupModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addSetupModalLabel">Add New Setup</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="{{ url_for('add_setup') }}" method="POST">
+                            <div class="mb-3">
+                                <label for="setupName" class="form-label">Setup Name</label>
+                                <input type="text" class="form-control" id="setupName" name="name" required>
+                                <label for="capacitiveSensorKey" class="form-label">Capacative Sensor Key</label>
+                                <input type="text" class="form-control" id="capacitiveSensorKey" name="CSKey" required>
+                                <label for="temperatureSensorKey" class="form-label">Temperature Sensor Key</label>
+                                <input type="text" class="form-control" id="temperatureSensorKey" name="TSKey" required>
+                                <label for="lightSensorKey" class="form-label">Light Sensor Key</label>
+                                <input type="text" class="form-control" id="lightSensorKey" name="LSKey" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add Setup</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</body>
+
+</html>
