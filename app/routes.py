@@ -76,26 +76,23 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
     #     db.session.commit()
     #     return {"status": "data saved"}
 
-
-
-
     # TODO update these methods to not use old SensorData class
-    @app.route('/historical-data')
-    @login_required
-    def get_historical_data():
-        start_date = request.args.get('start_date')
-        end_date = request.args.get('end_date')
-        data = SensorData.query.filter(SensorData.timestamp.between(start_date, end_date)).all()
-        return jsonify([{'timestamp': d.timestamp, 'value': d.value} for d in data])
+    # @app.route('/historical-data')
+    # @login_required
+    # def get_historical_data():
+    #     start_date = request.args.get('start_date')
+    #     end_date = request.args.get('end_date')
+    #     data = SensorData.query.filter(SensorData.timestamp.between(start_date, end_date)).all()
+    #     return jsonify([{'timestamp': d.timestamp, 'value': d.value} for d in data])
 
-    @app.route('/export-data')
-    @login_required
-    def export_data():
-        data = SensorData.query.all()
-        df = pd.DataFrame([{'timestamp': d.timestamp, 'value': d.value} for d in data])
-        export_file = '/tmp/sensor_data.csv'
-        df.to_csv(export_file, index=False)
-        return send_file(export_file, as_attachment=True)
+    # @app.route('/export-data')
+    # @login_required
+    # def export_data():
+    #     data = SensorData.query.all()
+    #     df = pd.DataFrame([{'timestamp': d.timestamp, 'value': d.value} for d in data])
+    #     export_file = '/tmp/sensor_data.csv'
+    #     df.to_csv(export_file, index=False)
+    #     return send_file(export_file, as_attachment=True)
     
 
     @app.route('/profile', methods=['GET', 'POST'])
@@ -217,3 +214,28 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
         }
 
         return jsonify(sensor_data)
+
+    @app.route('/set_threshold/<int:setup_id>', methods=['POST'])
+    @login_required
+    def set_threshold(setup_id):
+        setup = SoilSensorSetup.query.get_or_404(setup_id)
+        if setup.user_id != current_user.id:
+            abort(403)  # Unauthorized access
+
+        try:
+            threshold_value = float(request.form.get('threshold_value'))
+            
+            # Add any additional validation 
+            if threshold_value < 0 or threshold_value > 1000:  # Example range check
+                flash('Threshold value must be between 0 and 100', 'error')
+                return redirect(url_for('setup_details', setup_id=setup_id))
+
+            setup.capacitive_sensor_threshold = threshold_value
+            db.session.commit()
+
+            #flash(f'Threshold for {setup.name} set to {threshold_value}', 'success')
+            return redirect(url_for('setup_details', setup_id=setup_id))
+
+        except (ValueError, TypeError):
+            flash('Invalid threshold value. Please enter a valid number.', 'error')
+            return redirect(url_for('setup_details', setup_id=setup_id))
