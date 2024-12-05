@@ -4,13 +4,20 @@
 <head>
     <title>{{ setup.name }} - Sensor Details</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 </head>
 
 <body>
     <div class="container mt-5">
         <h1>{{ setup.name }} Sensor Details</h1>
+
+        <!-- {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %} {% endif %} {% endwith %} -->
 
         <div class="row">
             <div class="col-md-6">
@@ -18,6 +25,7 @@
                     <div class="card-header">Capacitive Sensor</div>
                     <div class="card-body">
                         <canvas id="capacitiveSensorChart"></canvas>
+                        <p>Current Threshold: {{ setup.capacitive_sensor_threshold or 'Not Set' }}</p>
                     </div>
                 </div>
             </div>
@@ -34,6 +42,11 @@
 
         <div class="row">
             <div class="col-md-6">
+                <button type="button" class="btn btn-secondary align-button" data-bs-toggle="modal" data-bs-target="#setThresholdModal">
+                    Set Threshold for Capacitive Sensor
+                </button>
+            </div>
+            <div class="col-md-6">
                 <div class="card mb-4">
                     <div class="card-header">Light Sensor</div>
                     <div class="card-body">
@@ -43,102 +56,168 @@
             </div>
         </div>
 
-    </div>
+        <!-- Threshold Modal -->
+        <div class="modal fade" id="setThresholdModal" tabindex="-1" aria-labelledby="setThresholdModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="setThresholdModalLabel">Set Threshold for Capacitive Sensor</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="thresholdForm" action="{{ url_for('set_threshold', setup_id=setup.id) }}" method="POST">
+                            <div class="mb-3">
+                                <label for="thresholdValue" class="form-label">Threshold Value</label>
+                                <input type="number" class="form-control" id="thresholdValue" name="threshold_value" min="0" max="1000" step="1" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Set Threshold</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <script>
-        function createChart(canvasId, label, data, backgroundColor, borderColor) {
-            const ctx = document.getElementById(canvasId).getContext('2d');
+        <script>
+            // Debug Modal Initialization
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('Bootstrap modal script loaded');
 
-            // Sort the data by timestamp in ascending order
-            data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                // Verify modal functionality
+                var thresholdModal = new bootstrap.Modal(document.getElementById('setThresholdModal'));
 
-            return new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.map(entry => new Date(entry.created_at).toLocaleTimeString([], {
-                        hour: 'numeric',
-                        minute: 'numeric',
-                        hour12: true
-                    })),
-                    datasets: [{
-                        label: label,
-                        data: data.map(entry => parseFloat(entry.value)),
-                        backgroundColor: backgroundColor,
-                        borderColor: borderColor,
-                        borderWidth: 2,
-                        tension: 0.3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Timestamp'
-                            }
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: label
+                // Add debug logging to modal events
+                document.getElementById('setThresholdModal').addEventListener('show.bs.modal', function() {
+                    console.log('Modal is about to be shown');
+                });
+
+                document.getElementById('setThresholdModal').addEventListener('shown.bs.modal', function() {
+                    console.log('Modal has been shown');
+                });
+            });
+
+            // Form Submission Debug
+            document.getElementById('thresholdForm').addEventListener('submit', function(e) {
+                console.log('Form submitted');
+                e.preventDefault(); // Temporarily prevent submission
+
+                // Log form data
+                const formData = new FormData(e.target);
+                for (let [key, value] of formData.entries()) {
+                    console.log(`${key}: ${value}`);
+                }
+
+                // Manually submit with fetch to see detailed network info
+                fetch(e.target.action, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        console.log('Response status:', response.status);
+                        return response.text();
+                    })
+                    .then(text => {
+                        console.log('Response text:', text);
+                        // Reload the page or update UI as needed
+                        window.location.reload();
+                    })
+                    .catch(error => {
+                        console.error('Fetch error:', error);
+                    });
+            });
+
+            function createChart(canvasId, label, data, backgroundColor, borderColor) {
+                const ctx = document.getElementById(canvasId).getContext('2d');
+
+                // Sort the data by timestamp in ascending order
+                data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+                return new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.map(entry => new Date(entry.created_at).toLocaleTimeString([], {
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: true
+                        })),
+                        datasets: [{
+                            label: label,
+                            data: data.map(entry => parseFloat(entry.value)),
+                            backgroundColor: backgroundColor,
+                            borderColor: borderColor,
+                            borderWidth: 2,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Timestamp'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: label
+                                }
                             }
                         }
                     }
-                }
-            });
-        }
+                });
+            }
 
-        // Get the setup ID from the URL
-        const setupId = window.location.pathname.split('/').pop();
+            // Get the setup ID from the URL
+            const setupId = window.location.pathname.split('/').pop();
 
-        // Fetch sensor data
-        fetch(`/api/sensor-data/${setupId}`)
-            .then(response => response.json())
-            .then(sensorData => {
-                console.log('Capacitive Sensor Data:', sensorData.capacitive);
-                console.log('Temperature Sensor Data:', sensorData.temperature);
-                console.log('Light Sensor Data:', sensorData.light);
+            // Fetch sensor data
+            fetch(`/api/sensor-data/${setupId}`)
+                .then(response => response.json())
+                .then(sensorData => {
+                    console.log('Capacitive Sensor Data:', sensorData.capacitive);
+                    console.log('Temperature Sensor Data:', sensorData.temperature);
+                    console.log('Light Sensor Data:', sensorData.light);
 
-                // Create Capacitive Sensor Chart
-                const capacitiveChart = createChart(
-                    'capacitiveSensorChart',
-                    'Capacitive Sensor',
-                    sensorData.capacitive,
-                    'rgba(75, 192, 192, 0.2)',
-                    'rgba(75, 192, 192, 1)'
-                );
-
-                // Create Temperature Sensor Chart (if data exists)
-                if (sensorData.temperature) {
-                    const temperatureChart = createChart(
-                        'temperatureSensorChart',
-                        'Temperature (°F)',
-                        sensorData.temperature,
-                        'rgba(255, 99, 132, 0.2)',
-                        'rgba(255, 99, 132, 1)'
+                    // Create Capacitive Sensor Chart
+                    const capacitiveChart = createChart(
+                        'capacitiveSensorChart',
+                        'Capacitive Sensor',
+                        sensorData.capacitive,
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(75, 192, 192, 1)'
                     );
-                } else {
-                    console.log('Temperature sensor data not found.');
-                }
 
-                // Create Light Sensor Chart (if data exists)
-                if (sensorData.light) {
-                    const lightChart = createChart(
-                        'lightSensorChart',
-                        'Light (lux)',
-                        sensorData.light,
-                        'rgba(54, 162, 235, 0.2)',
-                        'rgba(54, 162, 235, 1)'
-                    );
-                } else {
-                    console.log('Light sensor data not found.');
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching sensor data:', error);
-            });
-    </script>
+                    // Create Temperature Sensor Chart (if data exists)
+                    if (sensorData.temperature) {
+                        const temperatureChart = createChart(
+                            'temperatureSensorChart',
+                            'Temperature (°F)',
+                            sensorData.temperature,
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(255, 99, 132, 1)'
+                        );
+                    } else {
+                        console.log('Temperature sensor data not found.');
+                    }
+
+                    // Create Light Sensor Chart (if data exists)
+                    if (sensorData.light) {
+                        const lightChart = createChart(
+                            'lightSensorChart',
+                            'Light (lux)',
+                            sensorData.light,
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(54, 162, 235, 1)'
+                        );
+                    } else {
+                        console.log('Light sensor data not found.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching sensor data:', error);
+                });
+        </script>
 </body>
 
 </html>
