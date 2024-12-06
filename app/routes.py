@@ -99,12 +99,12 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
     @login_required
     def profile():
         form = UserProfileForm(obj=current_user)
-        print(current_user)
-        print(current_user.password_hash)
+        #print(current_user)
+        #print(current_user.password_hash)
         #if form.validate_on_submit():
-        print("form.validate_on_submit")
+        #print("form.validate_on_submit")
         #if check_password_hash(current_user.password_hash, form.current_password.data):
-        print("check_password_hash is true")
+        #print("check_password_hash is true")
         if form.adafruit_username.data:
             current_user.adafruit_username = form.adafruit_username.data
         elif hasattr(current_user, 'adafruit_username'):
@@ -113,7 +113,7 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
             current_user.adafruit_aio_key = form.adafruit_aio_key.data
         elif hasattr(current_user, 'adafruit_aio_key'):
             pass
-        print(current_user.adafruit_username)
+        #print(current_user.adafruit_username)
         # Update user's password if provided
         if form.new_password.data:
             current_user.password_hash = generate_password_hash(form.new_password.data)
@@ -130,7 +130,7 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
         elif hasattr(current_user, 'notification_preference'):
             pass
         db.session.commit()
-        print('profile updated success')
+        #print('profile updated success')
         flash('Profile updated successfully!', 'success')
         #return redirect(url_for('profile'))
         #else:
@@ -145,6 +145,7 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
         capacitive_sensor_key = request.form.get('CSKey')
         temperature_sensor_key = request.form.get('TSKey')
         light_sensor_key = request.form.get('LSKey')
+        mosfet_driver_key = request.form.get('MDKey')
 
         #if not name or not capacitive_sensor_key or not temperature_sensor_key or not light_sensor_key:
         #    flash('Please provide all required fields.', 'error')
@@ -156,7 +157,8 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
                 user_id=current_user.id,
                 capacitive_sensor_key=capacitive_sensor_key,
                 temperature_sensor_key=temperature_sensor_key,
-                light_sensor_key=light_sensor_key
+                light_sensor_key=light_sensor_key,
+                mosfet_driver_key=mosfet_driver_key
             )
             db.session.add(new_setup)
             db.session.commit()
@@ -203,7 +205,6 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
 
         # Fetch data for each sensor using their keys from the setup
         try:
-            
             capacitive_data = requests.get(
                 base_url + setup.capacitive_sensor_key + "/data",
                 headers={"X-AIO-Key": aio_key}
@@ -256,3 +257,43 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
         except (ValueError, TypeError):
             flash('Invalid threshold value. Please enter a valid number.', 'error')
             return redirect(url_for('setup_details', setup_id=setup_id))
+    
+    @app.route('/toggle_auto_water/<int:setup_id>', methods=['POST'])
+    def toggle_auto_water(setup_id):
+        """
+        Toggles the auto_water_enabled column for the specified setup.
+        """
+        setup = SoilSensorSetup.query.get_or_404(setup_id)
+
+        # Toggle the value of auto_water_enabled
+        setup.auto_water_enabled = not setup.auto_water_enabled
+
+        # Commit the changes to the database
+        db.session.commit()
+
+        # Return the updated status as a response
+        return jsonify({'auto_water_enabled': setup.auto_water_enabled})
+
+    @app.route('/trigger_pump/<int:setup_id>/<input>', methods=['POST'])
+    def trigger_pump(setup_id, input):
+        """
+        Triggers a pump based on an input and sends data to an Adafruit IO feed. 
+        Input can be 'true' or 'false'.
+        """
+        setup = SoilSensorSetup.query.get_or_404(setup_id)
+        username = current_user.adafruit_username
+        base_url = f"https://io.adafruit.com/api/v2/{username}/feeds/"
+
+        action = 1 if input.lower() == 'true' else 0
+
+        url = base_url + setup.mosfet_driver_key + "/data"
+        headers = {"X-AIO-Key": current_user.adafruit_aio_key}
+        payload = {"value": action}
+
+        response = requests.request("POST", url, headers=headers, data=payload)
+
+        if response.status_code == 200:
+            return jsonify(response.json())
+        else:
+            return jsonify({"error": "Failed to fetch historical data"}), response.status_code
+
