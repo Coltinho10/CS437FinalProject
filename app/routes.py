@@ -105,13 +105,30 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
         print("form.validate_on_submit")
         #if check_password_hash(current_user.password_hash, form.current_password.data):
         print("check_password_hash is true")
-        current_user.adafruit_username = form.adafruit_username.data
-        current_user.adafruit_aio_key = form.adafruit_aio_key.data
+        if form.adafruit_username.data:
+            current_user.adafruit_username = form.adafruit_username.data
+        elif hasattr(current_user, 'adafruit_username'):
+            pass
+        if form.adafruit_aio_key.data:
+            current_user.adafruit_aio_key = form.adafruit_aio_key.data
+        elif hasattr(current_user, 'adafruit_aio_key'):
+            pass
         print(current_user.adafruit_username)
         # Update user's password if provided
         if form.new_password.data:
             current_user.password_hash = generate_password_hash(form.new_password.data)
-
+        if form.phone_number.data:
+            current_user.phone_number = str(form.phone_number.data)
+        elif hasattr(current_user, 'phone_number'):
+            pass
+        if form.email.data:
+            current_user.email = str(form.email.data)
+        elif hasattr(current_user, 'email'):
+            pass
+        if form.notification_preference.data:
+            current_user.notification_preference = form.notification_preference.data
+        elif hasattr(current_user, 'notification_preference'):
+            pass
         db.session.commit()
         print('profile updated success')
         flash('Profile updated successfully!', 'success')

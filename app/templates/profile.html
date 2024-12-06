@@ -39,8 +39,24 @@
                 <label for="adafruitAioKey" class="form-label">Adafruit IO API Key</label>
                 <input type="password" class="form-control" id="adafruitAioKey" name="adafruit_aio_key">
             </div>
-            <button type="submit" class="btn   
- btn-primary">Update Profile</button>
+            <div class="mb-3">
+                <label for="adafruitAioKey" class="form-label">Phone number</label>
+                <input type="text" class="form-control" id="phoneNumber" name="phone_number">
+            </div>
+            <div class="mb-3">
+                <label for="adafruitAioKey" class="form-label">Email</label>
+                <input type="text" class="form-control" id="email" name="email">
+            </div>
+            <div class="mb-3">
+                <label for="notificationPreference" class="form-label">Notification Preference</label>
+                <select class="form-control" id="notificationPreference" name="notification_preference">
+                    <option value="both">SMS and Email</option>
+                    <option value="sms">SMS Only</option>
+                    <option value="email">Email Only</option>
+                    <option value="none">No Notifications</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Update Profile</button>
         </form>
     </div>
 </body>

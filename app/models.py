@@ -10,6 +10,9 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     adafruit_username = db.Column(db.String(100))
     adafruit_aio_key = db.Column(db.String(100))
+    phone_number = db.Column(db.String(20), nullable=True)
+    email = db.Column(db.String(50), nullable=True)
+    notification_preference = db.Column(db.String(20), default='both', nullable=True)
 
     def __repr__(self):
         return f'<User {self.username}>'
