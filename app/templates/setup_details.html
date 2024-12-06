@@ -25,7 +25,6 @@
                     <div class="card-header">Capacitive Sensor</div>
                     <div class="card-body">
                         <canvas id="capacitiveSensorChart"></canvas>
-                        <p>Current Threshold: {{ setup.capacitive_sensor_threshold or 'Not Set' }}</p>
                     </div>
                 </div>
             </div>
@@ -72,6 +71,7 @@
                             </div>
                             <button type="submit" class="btn btn-primary">Set Threshold</button>
                         </form>
+                        <p>Current Threshold: {{ setup.capacitive_sensor_threshold or 'Not Set' }}</p>
                     </div>
                 </div>
             </div>
