@@ -24,6 +24,9 @@ class SoilSensorSetup(db.Model):
     capacitive_sensor_key = db.Column(db.String(100))
     temperature_sensor_key = db.Column(db.String(100))
     light_sensor_key = db.Column(db.String(100))
+    mosfet_driver_key = db.Column(db.String(100))
     capacitive_sensor_threshold = db.Column(db.String(100))
+    auto_water_enabled = db.Column(db.Boolean, default=False, nullable=False)
+    last_watered = db.Column(db.DateTime, nullable=True)
 
     user = db.relationship('User', backref=db.backref('soil_sensor_setups', lazy=True))

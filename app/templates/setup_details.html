@@ -53,6 +53,51 @@
                     </div>
                 </div>
             </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="autoWaterToggle" class="form-label">Auto Watering</label>
+                        <!-- Bootstrap Toggle Switch -->
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="autoWaterToggle" {{ 'checked' if setup.auto_water_enabled else '' }}>
+                            <span id="autoWaterStatus" class="form-check-label">{{ 'On' if setup.auto_water_enabled else 'Off' }}</span> <!-- Initial label -->
+                        </div>
+                    </div>
+                
+                
+                <script>
+                    // Function to toggle auto-watering status
+                    function toggleAutoWater() {
+                        const setupId = "{{ setup.id }}"; // Get the setup_id from your Flask template context
+                        const status = document.getElementById('autoWaterToggle').checked ? 'true' : 'false';
+                
+                        // Construct the URL for the POST request
+                        const url = `/toggle_auto_water/${setupId}`;
+                
+                        // Send the POST request using fetch
+                        fetch(url, {
+                            method: 'POST',
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            console.log('Auto Watering Status:', data.auto_water_enabled);
+                            // Change label based on the response
+                            const autoWaterStatusLabel = document.getElementById('autoWaterStatus');
+                            if (data.auto_water_enabled) {
+                                autoWaterStatusLabel.textContent = 'On';
+                            } else {
+                                autoWaterStatusLabel.textContent = 'Off';
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('Error:', error);
+                            // Optionally show error to user
+                        });
+                    }
+                
+                    // Event listener for the auto-water toggle
+                    document.getElementById('autoWaterToggle').addEventListener('change', toggleAutoWater);
+                </script>
+            </div>
         </div>
 
         <!-- Threshold Modal -->
@@ -218,6 +263,54 @@
                     console.error('Error fetching sensor data:', error);
                 });
         </script>
+    
+    <!--Pump Control-->
+    <div class="row">
+        <div class="col-md-6">
+            <label for="pumpToggle" class="form-label">Pump Control</label>
+            <!-- Bootstrap Toggle Switch -->
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="pumpToggle">
+                <span id="pumpStatus" class="form-check-label">Off</span> <!-- Initial label is 'Off' -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Add Modal and other elements here -->
+    
+    <script>
+        // Function to trigger the pump
+        function triggerPump(status) {
+            const setupId = "{{ setup.id }}"; // Get the setup_id from your Flask template context    
+            const url = `/trigger_pump/${setupId}/${status}`;
+    
+            // Send the POST request using fetch
+            fetch(url, {
+                method: 'POST',
+            })
+            .then(response => response.json())
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+    
+        // Event listener for the toggle switch
+        document.getElementById('pumpToggle').addEventListener('change', function() {
+            const status = this.checked ? 'true' : 'false';
+            triggerPump(status); // Trigger the pump based on toggle state
+    
+            // Change the label text dynamically based on toggle state
+            const pumpStatusLabel = document.getElementById('pumpStatus');
+            if (this.checked) {
+                pumpStatusLabel.textContent = 'On';  // Show "On" if checked
+            } else {
+                pumpStatusLabel.textContent = 'Off'; // Show "Off" if unchecked
+            }
+        });
+    </script>
+    
+    
+
 </body>
 
 </html>
