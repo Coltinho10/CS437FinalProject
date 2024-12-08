@@ -4,6 +4,7 @@ from flask_login import LoginManager
 from . import config
 from .routes import init_routes
 from .models import db, User
+from flask_migrate import Migrate
 
 # Initialize extensions
 login_manager = LoginManager()
@@ -17,6 +18,7 @@ def create_app():
     app.config.from_object(config.Config)
 
     db.init_app(app)
+    migrate = Migrate(app, db)
     login_manager.init_app(app)
 
     # Initialize routes after app is created to avoid circular imports
