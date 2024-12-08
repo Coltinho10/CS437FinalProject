@@ -29,13 +29,12 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
             # Check if the user exists and the password matches
             if user and check_password_hash(user.password_hash, password):
                 login_user(user)  # Log the user in
-                flash('Login successful!')
+                flash('Login successful!', 'success')
                 return redirect(url_for('dashboard'))  # Redirect to the dashboard or home page
 
-            flash('Invalid username or password. Please try again.')
+            flash('Invalid username or password. Please try again.', 'warning')
 
         return render_template('login.html', form=form)
-
 
     @app.route('/register', methods=['GET', 'POST'])
     def register():
@@ -48,15 +47,20 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
             # Check if username already exists
             existing_user = User.query.filter_by(username=username).first()
             if existing_user:
-                flash('Username already exists. Please choose a different one.')
+                flash('Username already exists. Please choose a different one.', 'warning')
                 return redirect(url_for('register'))
 
             # Create a new user
+            try:
             new_user = User(username=username, password_hash=generate_password_hash(password))
             db.session.add(new_user)
             db.session.commit()
-            flash('User registered successfully!')
+                flash('Registration successful! Please log in.', 'success')
             return redirect(url_for('login'))
+            except IntegrityError:
+                db.session.rollback()
+                flash('An error occurred during registration. Please try again.', 'danger')
+                return redirect(url_for('register'))
 
         return render_template('register.html', form=form)
 
