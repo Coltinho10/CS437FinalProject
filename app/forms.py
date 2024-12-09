@@ -44,3 +44,13 @@ class UserProfileForm(FlaskForm):
         ('none', 'No Notifications')
     ])
     submit = SubmitField('Update Profile')
+    
+class EditSetupForm(FlaskForm):
+    name = StringField('Setup Name', validators=[DataRequired(), Length(max=100)])
+    image_url = StringField('Image URL', validators=[Length(max=255)])
+    capacitive_sensor_key = StringField('Capacitive Sensor Key', validators=[Length(max=100)])
+    temperature_sensor_key = StringField('Temperature Sensor Key', validators=[Length(max=100)])
+    light_sensor_key = StringField('Light Sensor Key', validators=[Length(max=100)])
+    mosfet_driver_key = StringField('Mosfet Driver Key', validators=[Length(max=100)])
+    capacitive_sensor_threshold = StringField('Capacitive Sensor Threshold', validators=[Length(max=100)])
+    submit = SubmitField('Update Setup')

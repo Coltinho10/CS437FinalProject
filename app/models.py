@@ -28,5 +28,7 @@ class SoilSensorSetup(db.Model):
     capacitive_sensor_threshold = db.Column(db.String(100))
     auto_water_enabled = db.Column(db.Boolean, default=False, nullable=False)
     last_watered = db.Column(db.DateTime, nullable=True)
+    image_url = db.Column(db.String(255)) 
+
 
     user = db.relationship('User', backref=db.backref('soil_sensor_setups', lazy=True))

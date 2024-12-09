@@ -5,11 +5,12 @@ import pandas as pd
 from datetime import datetime
 from .models import User, SoilSensorSetup
 from sqlalchemy.exc import IntegrityError
-from .forms import RegistrationForm, LoginForm, UserProfileForm
+from .forms import RegistrationForm, LoginForm, UserProfileForm, EditSetupForm
 import requests
 import plotly.graph_objects as go
 import plotly.express as px
 # Define login_manager user_loader
+
 def init_routes(app, db, login_manager):  # Accept db and login_manager as arguments
     @app.route('/')
     def index():
@@ -52,11 +53,11 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
 
             # Create a new user
             try:
-            new_user = User(username=username, password_hash=generate_password_hash(password))
-            db.session.add(new_user)
-            db.session.commit()
+                new_user = User(username=username, password_hash=generate_password_hash(password))
+                db.session.add(new_user)
+                db.session.commit()
                 flash('Registration successful! Please log in.', 'success')
-            return redirect(url_for('login'))
+                return redirect(url_for('login'))
             except IntegrityError:
                 db.session.rollback()
                 flash('An error occurred during registration. Please try again.', 'danger')
@@ -71,7 +72,29 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
         app.logger.debug(f"Fetched setups: {setups}")  # Log the fetched setups
         print("DEBUG")
         return render_template('dashboard.html', setups=setups)
-
+    
+    @app.route('/edit_setup/<int:setup_id>', methods=['GET', 'POST'])
+    @login_required
+    def edit_setup(setup_id):
+        setup = SoilSensorSetup.query.get_or_404(setup_id)
+        if setup.user_id != current_user.id:
+            flash('You do not have permission to edit this setup.', 'warning')
+            return redirect(url_for('dashboard'))
+        
+        form = EditSetupForm(obj=setup)
+        
+        if form.validate_on_submit():
+            form.populate_obj(setup)
+            try:
+                db.session.commit()
+                flash('Setup updated successfully!', 'success')
+                return redirect(url_for('dashboard'))
+            except IntegrityError:
+                db.session.rollback()
+                flash('Error updating setup. Please try again.', 'danger')
+        
+        return render_template('edit_setup.html', form=form, setup=setup)
+    
     # @app.route('/data', methods=['POST'])
     # def save_data():
     #     sensor_value = request.json.get('value')
@@ -150,6 +173,7 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
         temperature_sensor_key = request.form.get('TSKey')
         light_sensor_key = request.form.get('LSKey')
         mosfet_driver_key = request.form.get('MDKey')
+        image_url = request.form.get('image_url') 
 
         #if not name or not capacitive_sensor_key or not temperature_sensor_key or not light_sensor_key:
         #    flash('Please provide all required fields.', 'error')
@@ -162,7 +186,8 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
                 capacitive_sensor_key=capacitive_sensor_key,
                 temperature_sensor_key=temperature_sensor_key,
                 light_sensor_key=light_sensor_key,
-                mosfet_driver_key=mosfet_driver_key
+                mosfet_driver_key=mosfet_driver_key,
+                image_url=image_url  
             )
             db.session.add(new_setup)
             db.session.commit()
