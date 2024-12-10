@@ -5,95 +5,178 @@
     <title>Dashboard</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
 </head>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="{{ url_for('index') }}">SoilSensor</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('profile') }}">Profile</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-    </div>
-</nav>
-
 <body>
-    <div class="container">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('index') }}">SoilSensor</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('profile') }}">Profile</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
+    <div class="container mt-4">
         <h1>Your SoilSensor Setups</h1>
 
         <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addSetupModal">
             Add Setup
-        </button> {% if setups %}
-        <div class="row">
-            {% for setup in setups %}
-            <div class="col-md-4">
-                <div class="card mb-4 shadow-sm">
-                    <img src="{{ setup.image_url if setup.image_url else url_for('static', filename='images/plant_placeholder.webp') }}" class="card-img-top" alt="{{ setup.name }}">
-                    
-                    <div class="card-body">
-                        <h5 class="card-title">{{ setup.name }}</h5>
+        </button>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% if form.errors %}
+            {% for field, errors in form.errors.items() %}
+                {% for error in errors %}
+                    <div class="alert alert-danger">
+                        {{ error }}
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        {% endif %}
+
+        {% if setups %}
+            <div class="row">
+                {% for setup in setups %}
+                <div class="col-md-4">
+                    <div class="card mb-4 shadow-sm">
+                        <img src="{{ setup.image_url if setup.image_url else url_for('static', filename='images/plant_placeholder.webp') }}" class="card-img-top" alt="{{ setup.name }}">
                         
-                        <!-- Statistics -->
-                        <p class="card-text">
-                            <strong>Last Watered:</strong> {{ setup.last_watered.strftime('%Y-%m-%d') if setup.last_watered else 'Never' }}<br>
-                            <strong>Auto-Watering:</strong> {{ 'Enabled' if setup.auto_water_enabled else 'Disabled' }}<br>
-                            <strong>Number of Sensors:</strong> {{
-                                (setup.capacitive_sensor_key is not none) +
-                                (setup.temperature_sensor_key is not none) +
-                                (setup.light_sensor_key is not none) +
-                                (setup.mosfet_driver_key is not none)
-                            }}
-                        </p>
-                        
-                        <a href="{{ url_for('setup_details', setup_id=setup.id) }}" class="btn btn-primary">View Details</a>
-                        <a href="{{ url_for('edit_setup', setup_id=setup.id) }}" class="btn btn-warning">Edit</a>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ setup.name }}</h5>
+                            
+                            <!-- Statistics -->
+                            <p class="card-text">
+                                <strong>Last Watered:</strong> {{ setup.last_watered.strftime('%Y-%m-%d') if setup.last_watered else 'Never' }}<br>
+                                <strong>Auto-Watering:</strong> {{ 'Enabled' if setup.auto_water_enabled else 'Disabled' }}<br>
+                                <strong>Number of Sensors:</strong> {{
+                                    (setup.capacitive_sensor_key is not none) +
+                                    (setup.temperature_sensor_key is not none) +
+                                    (setup.light_sensor_key is not none) +
+                                    (setup.mosfet_driver_key is not none)
+                                }}
+                            </p>
+                            
+                            <a href="{{ url_for('setup_details', setup_id=setup.id) }}" class="btn btn-primary">View Details</a>
+                            <a href="{{ url_for('edit_setup', setup_id=setup.id) }}" class="btn btn-warning">Edit</a>
+                        </div>
                     </div>
                 </div>
+                {% endfor %}
             </div>
-            {% endfor %}
-        </div>
         {% else %}
-        <p>No setups found. Create a new setup.</p>
+            <p>No setups found. Create a new setup.</p>
         {% endif %}
+        
         <div class="modal fade" id="addSetupModal" tabindex="-1" aria-labelledby="addSetupModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addSetupModalLabel">Add New Setup</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form action="{{ url_for('add_setup') }}" method="POST">
+                    <form method="POST" action="{{ url_for('dashboard') }}">
+                        {{ form.hidden_tag() }}
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="addSetupModalLabel">Add New Setup</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
                             <div class="mb-3">
-                                <label for="setupName" class="form-label">Setup Name</label>
-                                <input type="text" class="form-control" id="setupName" name="name" required>
-                                <label for="imageUrl" class="form-label">Image URL</label>
-                                <input type="text" class="form-control" id="imageUrl" name="image_url" placeholder="Enter image URL">
-                                <label for="capacitiveSensorKey" class="form-label">Capacative Sensor Key</label>
-                                <input type="text" class="form-control" id="capacitiveSensorKey" name="CSKey" required>
-                                <label for="temperatureSensorKey" class="form-label">Temperature Sensor Key</label>
-                                <input type="text" class="form-control" id="temperatureSensorKey" name="TSKey" required>
-                                <label for="lightSensorKey" class="form-label">Light Sensor Key</label>
-                                <input type="text" class="form-control" id="lightSensorKey" name="LSKey" required>
-                                <label for="MosfetDriverKey" class="form-label">Mosfet Driver Key</label>
-                                <input type="text" class="form-control" id="MosfetDriverKey" name="MDKey" required>
+                                {{ form.name.label(class="form-label") }}
+                                {{ form.name(class="form-control", placeholder="Enter setup name") }}
+                                {% for error in form.name.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
                             </div>
+                            
+                            <div class="mb-3">
+                                {{ form.image_url.label(class="form-label") }}
+                                {{ form.image_url(class="form-control", placeholder="Enter image URL") }}
+                                {% for error in form.image_url.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.capacitive_sensor_key.label(class="form-label") }}
+                                {% if form.capacitive_sensor_key.choices|length > 1 %}
+                                    {{ form.capacitive_sensor_key(class="form-select") }}
+                                {% else %}
+                                    <select class="form-select" disabled>
+                                        <option>No Available Capacitive Sensors</option>
+                                    </select>
+                                {% endif %}
+                                {% for error in form.capacitive_sensor_key.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.temperature_sensor_key.label(class="form-label") }}
+                                {% if form.temperature_sensor_key.choices|length > 1 %}
+                                    {{ form.temperature_sensor_key(class="form-select") }}
+                                {% else %}
+                                    <select class="form-select" disabled>
+                                        <option>No Available Temperature Sensors</option>
+                                    </select>
+                                {% endif %}
+                                {% for error in form.temperature_sensor_key.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                {{ form.light_sensor_key.label(class="form-label") }}
+                                {% if form.light_sensor_key.choices|length > 1 %}
+                                    {{ form.light_sensor_key(class="form-select") }}
+                                {% else %}
+                                    <select class="form-select" disabled>
+                                        <option>No Available Light Sensors</option>
+                                    </select>
+                                {% endif %}
+                                {% for error in form.light_sensor_key.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Select Mosfet Driver -->
+                            <div class="mb-3">
+                                {{ form.mosfet_driver_key.label(class="form-label") }}
+                                {% if form.mosfet_driver_key.choices|length > 1 %}
+                                    {{ form.mosfet_driver_key(class="form-select") }}
+                                {% else %}
+                                    <select class="form-select" disabled>
+                                        <option>No Available Mosfet Drivers</option>
+                                    </select>
+                                {% endif %}
+                                {% for error in form.mosfet_driver_key.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                             <button type="submit" class="btn btn-primary">Add Setup</button>
-                        </form>
-                    </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-    </div>
     </div>
 </body>
 
