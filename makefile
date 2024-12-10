@@ -22,6 +22,21 @@ init-db:
 run:
 	. venv/bin/activate && python run.py
 
+# Run the celery worker
+.PHONY: celery_run
+celery_run:
+	. venv/bin/activate && celery -A run.celery worker --beat --loglevel=DEBUG
+
+# Run the celery beat
+.PHONY: celery_beat
+celery_beat:
+	. venv/bin/activate && celery -A run.celery beat --loglevel=debug
+
+# Run the celery beat list
+.PHONY: celery_list
+celery_list:
+	. venv/bin/activate && celery -A app.celery_worker.celery list
+
 # Clean up generated files
 .PHONY: clean
 clean:

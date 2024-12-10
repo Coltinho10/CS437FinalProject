@@ -1,4 +1,4 @@
-from flask import abort, render_template, request, jsonify, flash, redirect, send_file, url_for
+from flask import abort, render_template, request, Blueprint, jsonify, flash, redirect, send_file, url_for
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.security import check_password_hash, generate_password_hash
 import pandas as pd
@@ -9,8 +9,18 @@ from .forms import RegistrationForm, LoginForm, UserProfileForm
 import requests
 import plotly.graph_objects as go
 import plotly.express as px
+from .tasks import hello_world
+
+bp = Blueprint('tasks', __name__)
+
+@bp.route('/run-task', methods=['GET'])
+def run_task():
+    result = hello_world.delay()
+    return jsonify({"task_id": result.id}), 202
+
 # Define login_manager user_loader
-def init_routes(app, db, login_manager):  # Accept db and login_manager as arguments
+def init_routes(app, db, bp, login_manager):  # Accept db and login_manager as arguments
+    app.register_blueprint(bp)
     @app.route('/')
     def index():
         return render_template('index.html')
