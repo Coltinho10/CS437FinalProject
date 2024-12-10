@@ -173,10 +173,10 @@
 
             function createChart(canvasId, label, data, backgroundColor, borderColor) {
                 const ctx = document.getElementById(canvasId).getContext('2d');
-
+            
                 // Sort the data by timestamp in ascending order
                 data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-
+            
                 return new Chart(ctx, {
                     type: 'line',
                     data: {
@@ -191,29 +191,62 @@
                             backgroundColor: backgroundColor,
                             borderColor: borderColor,
                             borderWidth: 2,
-                            tension: 0.3
+                            tension: 0.3,
+                            pointRadius: 0, // Hide data points
+                            fill: false // No fill under the line
                         }]
                     },
                     options: {
                         responsive: true,
+                        interaction: {
+                            mode: 'index', // Tooltip mode aligned with x-axis
+                            intersect: false // Tooltip appears when hovering anywhere on x-axis
+                        },
+                        plugins: {
+                            tooltip: {
+                                enabled: true,
+                                callbacks: {
+                                    title: function(context) {
+                                        // Display the full timestamp
+                                        return context[0].label;
+                                    },
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            // Round the value to 2 decimal places
+                                            label += Math.round(context.parsed.y * 100) / 100;
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
                         scales: {
                             x: {
                                 title: {
                                     display: true,
                                     text: 'Timestamp'
+                                },
+                                ticks: {
+                                    maxRotation: 0,
+                                    minRotation: 0
                                 }
                             },
                             y: {
                                 title: {
                                     display: true,
                                     text: label
-                                }
+                                },
+                                beginAtZero: true
                             }
                         }
                     }
                 });
             }
-
+            
             // Get the setup ID from the URL
             const setupId = window.location.pathname.split('/').pop();
 
