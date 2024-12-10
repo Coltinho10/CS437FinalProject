@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, SelectField
-from wtforms.validators import DataRequired, Length, EqualTo, ValidationError
+from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Optional
 import re
 
 class RegistrationForm(FlaskForm):
@@ -24,10 +24,10 @@ class RegistrationForm(FlaskForm):
             raise ValidationError('Password must contain at least one number.')
         if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
             raise ValidationError('Password must contain at least one special character.')
+
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
-
 
 class UserProfileForm(FlaskForm):
     adafruit_username = StringField('Adafruit IO Username', validators=[DataRequired()])
@@ -44,3 +44,22 @@ class UserProfileForm(FlaskForm):
         ('none', 'No Notifications')
     ])
     submit = SubmitField('Update Profile')
+
+class EditSetupForm(FlaskForm):
+    name = StringField('Setup Name', validators=[DataRequired(), Length(max=100)])
+    image_url = StringField('Image URL', validators=[Length(max=255)])
+    capacitive_sensor_key = StringField('Capacitive Sensor Key', validators=[Length(max=100)])
+    temperature_sensor_key = StringField('Temperature Sensor Key', validators=[Length(max=100)])
+    light_sensor_key = StringField('Light Sensor Key', validators=[Length(max=100)])
+    mosfet_driver_key = StringField('Mosfet Driver Key', validators=[Length(max=100)])
+    capacitive_sensor_threshold = StringField('Capacitive Sensor Threshold', validators=[Length(max=100)])
+    submit = SubmitField('Update Setup')
+
+class AddSetupForm(FlaskForm):
+    name = StringField('Setup Name', validators=[DataRequired(), Length(max=100)])
+    image_url = StringField('Image URL', validators=[Length(max=255)])
+    capacitive_sensor_key = SelectField('Capacitive Sensor', choices=[], validators=[Optional()])
+    temperature_sensor_key = SelectField('Temperature Sensor', choices=[], validators=[Optional()])
+    light_sensor_key = SelectField('Light Sensor', choices=[], validators=[Optional()])
+    mosfet_driver_key = SelectField('Mosfet Driver', choices=[], validators=[Optional()])
+    submit = SubmitField('Add Setup')
