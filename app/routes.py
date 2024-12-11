@@ -217,15 +217,21 @@ def init_routes(app, db, login_manager):
     #     #else:
     #     #    flash('Incorrect current password.', 'error')
     #     return render_template('profile.html', form=form)
-    
+   
     @app.route('/profile', methods=['GET', 'POST'])
     @login_required
     def profile():
-        form = UserProfileForm(obj=current_user)  # Populate form with current user data
+        form = UserProfileForm()
 
-        # If user has an Adafruit AIO Key, set the form field to '***' to indicate it's set
-        if current_user.adafruit_aio_key and not form.adafruit_aio_key.data:
-            form.adafruit_aio_key.data = '***'
+        if request.method == 'GET':
+            # Pre-populate the form fields with current user data
+            form.adafruit_username.data = current_user.adafruit_username
+            form.phone_number.data = current_user.phone_number
+            form.email.data = current_user.email
+            form.notification_preference.data = current_user.notification_preference
+            # Pre-fill the adafruit_aio_key with masked value if it exists
+            if current_user.adafruit_aio_key:
+                form.adafruit_aio_key.data = '********'
 
         if form.validate_on_submit():
             # Update Adafruit Username if provided
@@ -233,26 +239,22 @@ def init_routes(app, db, login_manager):
                 current_user.adafruit_username = form.adafruit_username.data.strip()
 
             # Handle Adafruit AIO Key update
-            if form.adafruit_aio_key.data:
-                if form.adafruit_aio_key.data != '***':
-                    # User entered a new API Key; update it
-                    current_user.adafruit_aio_key = form.adafruit_aio_key.data.strip()
-                    flash('Adafruit IO API Key updated successfully!', 'success')
-                else:
-                    # User left the API Key as '***'; do not change it
-                    flash('Adafruit IO API Key remains unchanged.', 'info')
+            if form.adafruit_aio_key.data and form.adafruit_aio_key.data.strip():
+                # User entered something - update the key
+                current_user.adafruit_aio_key = form.adafruit_aio_key.data.strip()
+                flash('Adafruit IO API Key updated successfully!', 'success')
 
             # Handle password change
             if form.new_password.data:
                 if not form.current_password.data:
                     flash('Please enter your current password to set a new password.', 'danger')
-                    return redirect(url_for('profile'))
-                if check_password_hash(current_user.password_hash, form.current_password.data):
+                    # Do not redirect; allow the user to correct the form
+                elif check_password_hash(current_user.password_hash, form.current_password.data):
                     current_user.password_hash = generate_password_hash(form.new_password.data)
                     flash('Password updated successfully!', 'success')
                 else:
                     flash('Incorrect current password.', 'danger')
-                    return redirect(url_for('profile'))
+                    # Do not redirect; allow the user to correct the form
 
             # Update other profile fields if provided
             if form.phone_number.data:
@@ -270,18 +272,10 @@ def init_routes(app, db, login_manager):
                 db.session.rollback()
                 app.logger.error(f"Database error during profile update: {e}")
                 flash('An error occurred while updating your profile. Please try again.', 'danger')
-                return redirect(url_for('profile'))
+                # Do not redirect; allow the user to attempt again
 
-        elif request.method == 'POST':
-            # If form didn't validate, flash errors without redirecting
-            for field, errors in form.errors.items():
-                for error in errors:
-                    field_label = getattr(form, field).label.text
-                    flash(f"Error in {field_label}: {error}", 'danger')
-
+        # No need to handle form errors here; they will be displayed under the fields
         return render_template('profile.html', form=form)
-    
-
 
     def fetch_feeds_from_adafruit(username, aio_key):
         url = f"https://io.adafruit.com/api/v2/{username}/feeds/"
