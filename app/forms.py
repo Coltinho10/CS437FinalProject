@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, SelectField
-from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Optional
+from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Optional, Email
 import re
 
 class RegistrationForm(FlaskForm):
@@ -30,19 +30,19 @@ class LoginForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
 
 class UserProfileForm(FlaskForm):
-    adafruit_username = StringField('Adafruit IO Username', validators=[DataRequired()])
-    adafruit_aio_key = PasswordField('Adafruit IO API Key', validators=[DataRequired()])
-    current_password = PasswordField('Current Password', validators=[DataRequired()])
-    new_password = PasswordField('New Password', validators=[Length(min=6)])
-    confirm_password = PasswordField('Confirm Password', validators=[Length(min=6)])
-    phone_number = StringField('Phone number', validators=[Length(max=10)])
-    email = StringField('Email', validators=[Length(min=6)])
+    adafruit_username = StringField('Adafruit IO Username', validators=[Optional(), Length(max=50)])
+    adafruit_aio_key = PasswordField('Adafruit IO API Key', validators=[Optional(), Length(max=100)])
+    phone_number = StringField('Phone Number', validators=[Optional(), Length(max=10)])
+    email = StringField('Email', validators=[Optional(), Email(), Length(max=120)])
     notification_preference = SelectField('Notification Preference', choices=[
         ('both', 'SMS and Email'),
         ('sms', 'SMS Only'),
         ('email', 'Email Only'),
         ('none', 'No Notifications')
-    ])
+    ], validators=[Optional()])
+    current_password = PasswordField('Current Password', validators=[Optional()])
+    new_password = PasswordField('New Password', validators=[Optional(), Length(min=6)])
+    confirm_password = PasswordField('Confirm New Password', validators=[Optional(), EqualTo('new_password', message='Passwords must match.')])
     submit = SubmitField('Update Profile')
 
 class EditSetupForm(FlaskForm):

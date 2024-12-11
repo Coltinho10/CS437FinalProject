@@ -217,18 +217,30 @@ def init_routes(app, db, login_manager):
     #     #else:
     #     #    flash('Incorrect current password.', 'error')
     #     return render_template('profile.html', form=form)
-
+    
     @app.route('/profile', methods=['GET', 'POST'])
     @login_required
     def profile():
         form = UserProfileForm(obj=current_user)  # Populate form with current user data
 
+        # If user has an Adafruit AIO Key, set the form field to '***' to indicate it's set
+        if current_user.adafruit_aio_key and not form.adafruit_aio_key.data:
+            form.adafruit_aio_key.data = '***'
+
         if form.validate_on_submit():
-            # Update Adafruit credentials if provided
+            # Update Adafruit Username if provided
             if form.adafruit_username.data:
                 current_user.adafruit_username = form.adafruit_username.data.strip()
+
+            # Handle Adafruit AIO Key update
             if form.adafruit_aio_key.data:
-                current_user.adafruit_aio_key = form.adafruit_aio_key.data.strip()
+                if form.adafruit_aio_key.data != '***':
+                    # User entered a new API Key; update it
+                    current_user.adafruit_aio_key = form.adafruit_aio_key.data.strip()
+                    flash('Adafruit IO API Key updated successfully!', 'success')
+                else:
+                    # User left the API Key as '***'; do not change it
+                    flash('Adafruit IO API Key remains unchanged.', 'info')
 
             # Handle password change
             if form.new_password.data:
@@ -241,8 +253,8 @@ def init_routes(app, db, login_manager):
                 else:
                     flash('Incorrect current password.', 'danger')
                     return redirect(url_for('profile'))
-            
-            # Update other profile fields
+
+            # Update other profile fields if provided
             if form.phone_number.data:
                 current_user.phone_number = form.phone_number.data.strip()
             if form.email.data:
@@ -253,19 +265,19 @@ def init_routes(app, db, login_manager):
             try:
                 db.session.commit()
                 flash('Profile updated successfully!', 'success')
-                return redirect(url_for('profile'))  # Redirect to GET profile to prevent form resubmission
+                return redirect(url_for('profile'))  # Redirect to prevent form resubmission
             except SQLAlchemyError as e:
                 db.session.rollback()
                 app.logger.error(f"Database error during profile update: {e}")
                 flash('An error occurred while updating your profile. Please try again.', 'danger')
                 return redirect(url_for('profile'))
-        
+
         elif request.method == 'POST':
             # If form didn't validate, flash errors without redirecting
             for field, errors in form.errors.items():
                 for error in errors:
-                    field_name = getattr(form, field).label.text
-                    flash(f"Error in {field_name}: {error}", 'danger')
+                    field_label = getattr(form, field).label.text
+                    flash(f"Error in {field_label}: {error}", 'danger')
 
         return render_template('profile.html', form=form)
     
@@ -408,3 +420,11 @@ def init_routes(app, db, login_manager):
         except requests.exceptions.RequestException as e:
             logging.error(f"Error triggering pump: {e}")
             return jsonify({"error": "Failed to trigger pump"}), 500
+
+
+    @app.route('/logout')
+    @login_required
+    def logout():
+        logout_user()  # Logs out the current user
+        flash('You have been logged out.', 'info')  # Optional: Flash a logout message
+        return redirect(url_for('login'))  # Redirect to the login page
