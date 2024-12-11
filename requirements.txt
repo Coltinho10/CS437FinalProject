@@ -8,3 +8,4 @@ requests
 plotly
 gunicorn
 celery[redis]
+flower

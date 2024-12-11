@@ -27,15 +27,10 @@ run:
 celery_run:
 	. venv/bin/activate && celery -A run.celery worker --beat --loglevel=DEBUG
 
-# Run the celery beat
-.PHONY: celery_beat
-celery_beat:
-	. venv/bin/activate && celery -A run.celery beat --loglevel=debug
-
-# Run the celery beat list
-.PHONY: celery_list
-celery_list:
-	. venv/bin/activate && celery -A app.celery_worker.celery list
+# Run the celery flower
+.PHONY: celery_flower
+celery_flower:
+	. venv/bin/activate && celery -A run.celery flower
 
 # Clean up generated files
 .PHONY: clean
@@ -54,8 +49,10 @@ export-data:
 .PHONY: help
 help:
 	@echo "Usage:"
-	@echo "  make setup       - Set up the virtual environment and install dependencies"
-	@echo "  make init-db     - Initialize the database"
-	@echo "  make run         - Run the Flask development server"
-	@echo "  make clean       - Remove generated files and clean the project"
-	@echo "  make export-data - Export data to CSV"
+	@echo "  make setup         - Set up the virtual environment and install dependencies"
+	@echo "  make init-db       - Initialize the database"
+	@echo "  make run           - Run the Flask development server"
+	@echo "  make celery_run    - Run the celery worker and scheduler"
+	@echo "  make celery_flower - Run flower to check tasks and scheduled tasks"
+	@echo "  make clean         - Remove generated files and clean the project"
+	@echo "  make export-data   - Export data to CSV"

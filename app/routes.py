@@ -6,17 +6,12 @@ from datetime import datetime
 from .models import User, SoilSensorSetup
 from sqlalchemy.exc import IntegrityError
 from .forms import RegistrationForm, LoginForm, UserProfileForm
+from .utils import get_sensor_data, exec_trigger_pump
 import requests
 import plotly.graph_objects as go
 import plotly.express as px
-from .tasks import hello_world
 
 bp = Blueprint('tasks', __name__)
-
-@bp.route('/run-task', methods=['GET'])
-def run_task():
-    result = hello_world.delay()
-    return jsonify({"task_id": result.id}), 202
 
 # Define login_manager user_loader
 def init_routes(app, db, bp, login_manager):  # Accept db and login_manager as arguments
@@ -200,48 +195,12 @@ def init_routes(app, db, bp, login_manager):  # Accept db and login_manager as a
 
     @app.route('/api/sensor-data/<int:setup_id>')
     @login_required
-    def get_sensor_data(setup_id):
+    def sensor_data(setup_id):
         setup = SoilSensorSetup.query.get_or_404(setup_id)
         if setup.user_id != current_user.id:
             abort(403)  # Unauthorized access
-
-        # Retrieve user's Adafruit IO credentials from the database
-        username = current_user.adafruit_username
-        aio_key = current_user.adafruit_aio_key
-        #print(username)
-        #print(aio_key)
-        # Construct the base URL for API calls
-        base_url = f"https://io.adafruit.com/api/v2/{username}/feeds/"
-
-        # Fetch data for each sensor using their keys from the setup
-        try:
-            capacitive_data = requests.get(
-                base_url + setup.capacitive_sensor_key + "/data",
-                headers={"X-AIO-Key": aio_key}
-            ).json() if setup.capacitive_sensor_key else None
-            #print(capacitive_data)
-            temperature_data = requests.get(
-                base_url + setup.temperature_sensor_key + "/data",
-                headers={"X-AIO-Key": aio_key}
-            ).json() if setup.temperature_sensor_key else None
-
-            light_data = requests.get(
-                base_url + setup.light_sensor_key + "/data",
-                headers={"X-AIO-Key": aio_key}
-            ).json() if setup.light_sensor_key else None
-
-        except requests.exceptions.RequestException as e:
-            print(f"Error fetching sensor data: {e}")
-            return jsonify({"error": "Failed to fetch sensor data"}), 500
-
-        # Prepare the sensor data dictionary
-        sensor_data = {
-            'capacitive': capacitive_data,
-            'temperature': temperature_data,
-            'light': light_data,
-        }
-
-        return jsonify(sensor_data)
+        
+        return get_sensor_data(setup_id, current_user.adafruit_username, current_user.adafruit_aio_key)
 
     @app.route('/set_threshold/<int:setup_id>', methods=['POST'])
     @login_required
@@ -269,6 +228,7 @@ def init_routes(app, db, bp, login_manager):  # Accept db and login_manager as a
             return redirect(url_for('setup_details', setup_id=setup_id))
     
     @app.route('/toggle_auto_water/<int:setup_id>', methods=['POST'])
+    @login_required
     def toggle_auto_water(setup_id):
         """
         Toggles the auto_water_enabled column for the specified setup.
@@ -285,25 +245,14 @@ def init_routes(app, db, bp, login_manager):  # Accept db and login_manager as a
         return jsonify({'auto_water_enabled': setup.auto_water_enabled})
 
     @app.route('/trigger_pump/<int:setup_id>/<input>', methods=['POST'])
+    @login_required
     def trigger_pump(setup_id, input):
         """
         Triggers a pump based on an input and sends data to an Adafruit IO feed. 
         Input can be 'true' or 'false'.
         """
         setup = SoilSensorSetup.query.get_or_404(setup_id)
-        username = current_user.adafruit_username
-        base_url = f"https://io.adafruit.com/api/v2/{username}/feeds/"
+        if setup.user_id != current_user.id:
+            abort(403)  # Unauthorized access
 
-        action = 1 if input.lower() == 'true' else 0
-
-        url = base_url + setup.mosfet_driver_key + "/data"
-        headers = {"X-AIO-Key": current_user.adafruit_aio_key}
-        payload = {"value": action}
-
-        response = requests.request("POST", url, headers=headers, data=payload)
-
-        if response.status_code == 200:
-            return jsonify(response.json())
-        else:
-            return jsonify({"error": "Failed to fetch historical data"}), response.status_code
-
+        return  exec_trigger_pump(setup_id, input, current_user.adafruit_username, current_user.adafruit_aio_key)

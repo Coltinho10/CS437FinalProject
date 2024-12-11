@@ -21,29 +21,29 @@ def create_app():
 
     db.init_app(app)
     login_manager.init_app(app)
-
-    # Configure Celery
     app.config.update(
         CELERY_BROKER_URL="redis://localhost:6379/0",
-        CELERY_RESULT_BACKEND="redis://localhost:6379/0",
-        CELERY_BEAT_SCHEDULE={
-            "every-20-seconds": {
-                "task": "app.tasks.twenty_seconds",
-                "schedule": 10.0,  # Run every 20 seconds
-            }
-        },
-        CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
-
+        result_backend="redis://localhost:6379/0",
     )
+    celery = make_celery(app)
+    # Configure Celery
+    celery.conf.beat_schedule = {
+        'check-and-water-task': {
+            'task': 'app.tasks.check_and_water',
+            'schedule': 120.0,  # Every 5 minutes crontab(seconds='*/20'
+        },
+    }
+
+    celery.conf.timezone = "UTC"
 
     # Initialize routes after app is created to avoid circular imports
     init_routes(app, db, bp, login_manager)
-
+    
     with app.app_context():
         print("Creating tables...")
         db.create_all()
 
-    celery = make_celery(app)
+    
     celery.set_default()
     celery.autodiscover_tasks(["app.tasks"])
 
