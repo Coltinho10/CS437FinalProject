@@ -52,11 +52,11 @@ def init_routes(app, db, login_manager):  # Accept db and login_manager as argum
 
             # Create a new user
             try:
-            new_user = User(username=username, password_hash=generate_password_hash(password))
-            db.session.add(new_user)
-            db.session.commit()
+                new_user = User(username=username, password_hash=generate_password_hash(password))
+                db.session.add(new_user)
+                db.session.commit()
                 flash('Registration successful! Please log in.', 'success')
-            return redirect(url_for('login'))
+                return redirect(url_for('login'))
             except IntegrityError:
                 db.session.rollback()
                 flash('An error occurred during registration. Please try again.', 'danger')
