@@ -42,18 +42,64 @@
     </nav>
 
 
-    <header class="hero bg-primary text-white text-center py-5">
-        <div class="container">
-            <h1>Welcome to SoilSensor</h1>
-            <p class="lead">The IoT controlled automatic plant telemetry and watering system.</p>
-            <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">Get Started</a>
+    <header class="hero bg-primary text-white text-center py-5 position-relative vh-75">
+        <div class="container position-relative" style="z-index: 1;">
+            <h1 class="display-2 fw-bold mb-4 animate__animated animate__fadeIn">Welcome to SoilSensor</h1>
+            <p class="lead fs-3 mb-5 animate__animated animate__fadeIn animate__delay-1s">
+                The smart IoT solution for automated plant care and monitoring.
+                <br>Track moisture levels, automate watering, and keep your plants thriving.
+            </p>
+            <div class="d-flex justify-content-center gap-3 animate__animated animate__fadeIn animate__delay-2s">
+                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-5 py-3 fw-bold hover-scale">
+                    Get Started Now
+                </a>
+                <a href="#features" class="btn btn-outline-light btn-lg px-5 py-3 hover-scale">
+                    Learn More
+                </a>
+            </div>
+        </div>
+        <div class="position-absolute top-0 start-0 w-100 h-100" style="z-index: 0;">
+            <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
+            <!-- <spline-viewer url="https://prod.spline.design/SYHBfHiU-Csu8q4r/scene.splinecode"></spline-viewer> -->
+            <spline-viewer url="https://prod.spline.design/SYHBfHiU-Csu8q4r/scene.splinecode" 
+                          style="height: 100%; width: 100%;"></spline-viewer>
         </div>
     </header>
+
+    <!-- Add these styles to your head section -->
+    <style>
+        .vh-75 {
+            height: 75vh !important;
+        }
+        .hover-scale {
+            transition: transform 0.3s ease;
+        }
+        .hover-scale:hover {
+            transform: scale(1.05);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate__animated {
+            animation-duration: 1s;
+        }
+        .animate__fadeIn {
+            animation-name: fadeIn;
+        }
+        .animate__delay-1s {
+            animation-delay: 0.5s;
+        }
+        .animate__delay-2s {
+            animation-delay: 1s;
+        }
+    </style></div>
 
 
     <section class="py-5">
         <div class="container text-center">
-            <h2 class="mb-4">Features of SoilSensor</h2>
+            <!-- id to jump to this part of the page -->
+            <h2 class="mb-4" id="features">Features of SoilSensor</h2>
             <div class="row">
                 <div class="col-md-4">
                     <div class="card mb-4 shadow-sm">
