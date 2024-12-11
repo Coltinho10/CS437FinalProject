@@ -30,7 +30,7 @@ def create_app():
     celery.conf.beat_schedule = {
         'check-and-water-task': {
             'task': 'app.tasks.check_and_water',
-            'schedule': 120.0,  # Every 5 minutes crontab(seconds='*/20'
+            'schedule': crontab(minute='*/20'),  # Every 5 minutes crontab(seconds='*/20'
         },
     }
 

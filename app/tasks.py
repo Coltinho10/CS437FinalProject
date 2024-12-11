@@ -28,7 +28,7 @@ def check_and_water():
                 print(f"Pump triggered for setup {setup.id}: watering plants.")
                 
                 # Schedule the turn-off task to run in 1 minute
-                turn_off_pump.apply_async((setup.id, user.adafruit_username, user.adafruit_aio_key), countdown=60)
+                turn_off_pump.apply_async((setup.id, user.adafruit_username, user.adafruit_aio_key), countdown=3)
                 
                 # Update the last watered time
                 setup.last_watered = datetime.utcnow()
