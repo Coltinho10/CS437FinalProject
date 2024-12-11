@@ -302,6 +302,17 @@ def init_routes(app, db, login_manager):
         setup = SoilSensorSetup.query.get_or_404(setup_id)
         form = EditSetupForm(obj=setup)
         return render_template('setup_details.html', setup=setup, form=form)
+    
+    @app.route('/setup/<int:setup_id>/delete', methods=['POST'])
+    @login_required
+    def delete_setup(setup_id):
+        setup = SoilSensorSetup.query.get_or_404(setup_id)
+        if setup.user_id != current_user.id:
+            abort(403)
+        db.session.delete(setup)
+        db.session.commit()
+        flash('Setup deleted successfully.', 'success')
+        return redirect(url_for('dashboard'))
 
     @app.route('/api/sensor-data/<int:setup_id>')
     @login_required
