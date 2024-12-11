@@ -15,22 +15,8 @@
                 "--no-reload"
             ],
             "jinja": true,
-            "autoStartBrowser": false
-        },
-        {
-            "type": "debugpy",
-            "request": "launch",
-            "name": "Launch Flask App",
-            "program": "${workspaceFolder}/run.py",
-            "env": {
-                "FLASK_APP": "run.py",
-                "FLASK_ENV": "development"
-            },
-            "args": [
-                "run"
-            ],
-            "jinja": true,
-            "justMyCode": true
+            "autoStartBrowser": false,
+
         }
     ]
 }
