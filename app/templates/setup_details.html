@@ -155,8 +155,8 @@
 
         <!-- Custom Scripts -->
         <script>
-            // Pass the temperature_unit from Flask to JavaScript
-            const temperatureUnit = "{{ setup.temperature_unit }}"; // 'Celsius', 'Fahrenheit', or 'Both'
+            // Pass the dispaly_both_units from Flask to JavaScript
+            const display_both_units = "{{ setup.display_both_units }}"; // 'Celsius', 'Fahrenheit', or 'Both'
 
             // 1. Register the custom vertical line plugin
             const verticalLinePlugin = {
@@ -299,7 +299,32 @@
                     }
                 };
 
-                if (temperatureUnit === 'Fahrenheit') {
+                if (display_both_units === 'yes') {
+                    // Display both Fahrenheit and Celsius
+                    datasets.push({
+                        label: 'Temperature (°F)',
+                        data: fahrenheitData,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        yAxisID: 'y',
+                        tension: 0.3,
+                        pointRadius: 0,
+                        fill: false
+                    });
+
+                    datasets.push({
+                        label: 'Temperature (°C)', 
+                        data: celsiusData,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        yAxisID: 'y',
+                        tension: 0.3,
+                        pointRadius: 0,
+                        fill: false
+                    });
+
+                    scalesConfig['y'].title.text = 'Temperature (°F/°C)';
+                } else if ("{{ form.temperature_sensor_key.object_data }}" === "fahrenheit") {
                     // Display only Fahrenheit
                     datasets.push({
                         label: 'Temperature (°F)',
@@ -311,8 +336,8 @@
                         pointRadius: 0,
                         fill: false
                     });
-                } else if (temperatureUnit === 'Celsius') {
-                    // Display only Celsius by converting Fahrenheit to Celsius
+                } else if ("{{ form.temperature_sensor_key.object_data }}" === "celsius") {
+                    // Display only Celsius
                     datasets.push({
                         label: 'Temperature (°C)',
                         data: celsiusData,
@@ -323,40 +348,8 @@
                         pointRadius: 0,
                         fill: false
                     });
+
                     scalesConfig['y'].title.text = 'Temperature (°C)';
-                } else if (temperatureUnit === 'Both') {
-                    // Display both Fahrenheit and Celsius on the same Y-axis
-                    // To prevent overlapping, we'll convert Celsius to Fahrenheit for plotting on the same scale
-
-                    // Since data is already in Fahrenheit, we don't need to convert it again
-                    // Instead, we can plot both datasets on the same Y-axis by ensuring both are in Fahrenheit
-
-                    // Original Fahrenheit dataset
-                    datasets.push({
-                        label: 'Temperature (°F)',
-                        data: fahrenheitData,
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                        yAxisID: 'y',
-                        tension: 0.3,
-                        pointRadius: 0,
-                        fill: false
-                    });
-
-                    // Converted Celsius dataset plotted as Fahrenheit
-                    // const celsiusAsFahrenheit = celsiusData.map(c => c * 9 / 5 + 32);
-                    datasets.push({
-                        label: 'Temperature (°C)',
-                        data: celsiusData,
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                        yAxisID: 'y',
-                        tension: 0.3,
-                        pointRadius: 0,
-                        fill: false
-                    });
-
-                    scalesConfig['y'].title.text = 'Temperature (°F) / Converted Temperature (°F)';
                 }
 
                 return new Chart(ctx, {

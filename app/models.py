@@ -33,7 +33,7 @@ class SoilSensorSetup(db.Model):
     capacitive_sensor_threshold = db.Column(db.String(100))
     auto_water_enabled = db.Column(db.Boolean, default=False, nullable=True)
     last_watered = db.Column(db.DateTime, nullable=True)
-    temperature_unit = db.Column(db.String(10), nullable=False, default='Celsius')  
+    display_both_units = db.Column(db.String(3), nullable=False, default='no')
     
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     

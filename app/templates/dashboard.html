@@ -147,12 +147,12 @@
                                 {% endfor %}
                             </div>
                             <div class="mb-3">
-                                {{ form.temperature_unit.label(class="form-label") }}
-                                {{ form.temperature_unit(class="form-select") }}
-                                {% for error in form.temperature_unit.errors %}
+                                {{ form.display_both_units.label(class="form-label") }}
+                                {{ form.display_both_units(class="form-select") }}
+                                {% for error in form.display_both_units.errors %}
                                     <div class="text-danger">{{ error }}</div>
                                 {% endfor %}
-                            </div>                            
+                            </div>
                             <div class="mb-3">
                                 {{ form.light_sensor_key.label(class="form-label") }}
                                 {% if form.light_sensor_key.choices|length > 1 %}

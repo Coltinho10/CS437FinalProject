@@ -129,7 +129,7 @@ def init_routes(app, db, login_manager):
             temperature_sensor_key = form.temperature_sensor_key.data if form.temperature_sensor_key.data else None
             light_sensor_key = form.light_sensor_key.data if form.light_sensor_key.data else None
             mosfet_driver_key = form.mosfet_driver_key.data if form.mosfet_driver_key.data else None
-            temperature_unit =  form.temperature_unit.data if form.temperature_unit.data else None
+            display_both_units = form.display_both_units.data if form.display_both_units.data else 'no'
             
             try:
                 new_setup = SoilSensorSetup(
@@ -140,7 +140,7 @@ def init_routes(app, db, login_manager):
                     light_sensor_key=light_sensor_key,
                     mosfet_driver_key=mosfet_driver_key,
                     image_url=image_url,
-                    temperature_unit=temperature_unit
+                    display_both_units=display_both_units
                 )
                 db.session.add(new_setup)
                 db.session.commit()
@@ -168,7 +168,7 @@ def init_routes(app, db, login_manager):
         if form.validate_on_submit():
             form.populate_obj(setup)
             try:
-                setup.temperature_unit = form.temperature_unit.data  # Add this line
+                setup.display_both_units = form.display_both_units.data 
                 db.session.commit()
                 flash('Setup updated successfully.', 'success')
                 return redirect(url_for('dashboard'))
@@ -300,7 +300,8 @@ def init_routes(app, db, login_manager):
     @login_required
     def setup_details(setup_id):
         setup = SoilSensorSetup.query.get_or_404(setup_id)
-        return render_template('setup_details.html', setup=setup)
+        form = EditSetupForm(obj=setup)
+        return render_template('setup_details.html', setup=setup, form=form)
 
     @app.route('/api/sensor-data/<int:setup_id>')
     @login_required
