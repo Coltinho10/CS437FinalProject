@@ -3,17 +3,23 @@
 
 <head>
     <title>{{ setup.name }} - Sensor Details</title>
+    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- jQuery (optional, used in your script) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 </head>
 
 <body>
+    <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">SoilSensor</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
@@ -28,17 +34,33 @@
             </div>
         </div>
     </nav>
+
+    <!-- Main Container -->
     <div class="container mt-5">
         <h1>{{ setup.name }} - Sensor Details</h1>
         <a href="{{ url_for('dashboard') }}" class="btn btn-secondary mb-3">Back</a>
 
-        <!-- {% with messages = get_flashed_messages(with_categories=true) %} {% if messages %} {% for category, message in messages %}
-        <div class="alert alert-{{ category }}">
-            {{ message }}
+        <!-- Flash Messages -->
+        <div class="container mt-3">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show mb-4" role="alert">
+                {% if message == "Account setup required." %}
+                Account setup required. <a href="{{ url_for('profile') }}" class="alert-link">Click here to get started.</a>
+                {% else %}
+                {{ message }}
+                {% endif %}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
         </div>
-        {% endfor %} {% endif %} {% endwith %} -->
 
+        <!-- Sensor Charts -->
         <div class="row">
+            <!-- Capacitive Sensor Chart -->
             <div class="col-md-6">
                 <div class="card mb-4">
                     <div class="card-header">Capacitive Sensor</div>
@@ -48,6 +70,7 @@
                 </div>
             </div>
 
+            <!-- Temperature Sensor Chart -->
             <div class="col-md-6">
                 <div class="card mb-4">
                     <div class="card-header">Temperature Sensor</div>
@@ -58,90 +81,43 @@
             </div>
         </div>
 
+        <!-- Threshold Button and Light Sensor Chart -->
         <div class="row">
-            <div class="col-md-6">
-                <button type="button" class="btn btn-secondary align-button" data-bs-toggle="modal" data-bs-target="#setThresholdModal">
+            <!-- Set Threshold Button -->
+            <div class="col-md-6 mb-4">
+                <button type="button" class="btn btn-secondary" data-bs-toggle="modal"
+                    data-bs-target="#setThresholdModal">
                     Set Threshold for Capacitive Sensor
                 </button>
             </div>
-            <div class="col-md-6">
-                <div class="card mb-4">
+
+            <!-- Light Sensor Chart -->
+            <div class="col-md-6 mb-4">
+                <div class="card">
                     <div class="card-header">Light Sensor</div>
                     <div class="card-body">
                         <canvas id="lightSensorChart"></canvas>
                     </div>
                 </div>
             </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <label for="autoWaterToggle" class="form-label">Auto Watering</label>
-                        <!-- Bootstrap Toggle Switch -->
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="autoWaterToggle" {{ 'checked' if setup.auto_water_enabled else '' }}>
-                            <span id="autoWaterStatus" class="form-check-label">{{ 'On' if setup.auto_water_enabled else 'Off' }}</span> <!-- Initial label -->
-                        </div>
-                    </div>
-                
-                
-                <script>
-                    // Function to toggle auto-watering status
-                    function toggleAutoWater() {
-                        const setupId = "{{ setup.id }}"; // Get the setup_id from your Flask template context
-                        const status = document.getElementById('autoWaterToggle').checked ? 'true' : 'false';
-                
-                        // Construct the URL for the POST request
-                        const url = `/toggle_auto_water/${setupId}`;
-                
-                        // Send the POST request using fetch
-                        fetch(url, {
-                            method: 'POST',
-                        })
-                        .then(response => response.json())
-                        .then(data => {
-                            console.log('Auto Watering Status:', data.auto_water_enabled);
-                            // Change label based on the response
-                            const autoWaterStatusLabel = document.getElementById('autoWaterStatus');
-                            if (data.auto_water_enabled) {
-                                autoWaterStatusLabel.textContent = 'On';
-                            } else {
-                                autoWaterStatusLabel.textContent = 'Off';
-                            }
-                        })
-                        .catch((error) => {
-                            console.error('Error:', error);
-                            // Optionally show error to user
-                        });
-                    }
-                
-                    // Event listener for the auto-water toggle
-                    document.getElementById('autoWaterToggle').addEventListener('change', toggleAutoWater);
-                </script>
-            </div>
         </div>
 
-        <!-- Threshold Modal -->
-        <div class="modal fade" id="setThresholdModal" tabindex="-1" aria-labelledby="setThresholdModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-sm">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="setThresholdModalLabel">Set Threshold for Capacitive Sensor</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="thresholdForm" action="{{ url_for('set_threshold', setup_id=setup.id) }}" method="POST">
-                            <div class="mb-3">
-                                <label for="thresholdValue" class="form-label">Threshold Value</label>
-                                <input type="number" class="form-control" id="thresholdValue" name="threshold_value" min="0" max="1000" step="1" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Set Threshold</button>
-                        </form>
-                        <p>Current Threshold: {{ setup.capacitive_sensor_threshold or 'Not Set' }}</p>
-                    </div>
+        <!-- Auto Watering Toggle -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <label for="autoWaterToggle" class="form-label">Auto Watering</label>
+                <!-- Bootstrap Toggle Switch -->
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="autoWaterToggle" {{ 'checked' if
+                        setup.auto_water_enabled else '' }}>
+                    <span id="autoWaterStatus" class="form-check-label">{{ 'On' if setup.auto_water_enabled else 'Off'
+                        }}</span> <!-- Initial label -->
                 </div>
             </div>
         </div>
 
-        <div class="row">
+        <!-- Pump Control Toggle -->
+        <div class="row mb-4">
             <div class="col-md-6">
                 <label for="pumpToggle" class="form-label">Pump Control</label>
                 <!-- Bootstrap Toggle Switch -->
@@ -152,113 +128,355 @@
             </div>
         </div>
 
-            <script>
-                // Register the custom vertical line plugin
-                const verticalLinePlugin = {
-                    id: 'verticalLine',
-                    afterDraw: (chart) => {
-                        if (chart.tooltip && chart.tooltip.opacity !== 0) {
-                            const ctx = chart.ctx;
-                            const x = chart.tooltip.caretX;
-                            const topY = chart.scales.y.top;
-                            const bottomY = chart.scales.y.bottom;
+        <!-- Threshold Modal -->
+        <div class="modal fade" id="setThresholdModal" tabindex="-1" aria-labelledby="setThresholdModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="setThresholdModalLabel">Set Threshold for Capacitive Sensor</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="thresholdForm" action="{{ url_for('set_threshold', setup_id=setup.id) }}"
+                            method="POST">
+                            <div class="mb-3">
+                                <label for="thresholdValue" class="form-label">Threshold Value</label>
+                                <input type="number" class="form-control" id="thresholdValue" name="threshold_value"
+                                    min="0" max="1000" step="1" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Set Threshold</button>
+                        </form>
+                        <p class="mt-3">Current Threshold: {{ setup.capacitive_sensor_threshold or 'Not Set' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                            ctx.save();
-                            ctx.beginPath();
-                            ctx.moveTo(x, topY);
-                            ctx.lineTo(x, bottomY);
-                            ctx.lineWidth = 1;
-                            ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)'; // Customize the color and opacity as needed
-                            ctx.stroke();
-                            ctx.restore();
+        <!-- Custom Scripts -->
+        <script>
+            // Pass the temperature_unit from Flask to JavaScript
+            const temperatureUnit = "{{ setup.temperature_unit }}"; // 'Celsius', 'Fahrenheit', or 'Both'
+
+            // 1. Register the custom vertical line plugin
+            const verticalLinePlugin = {
+                id: 'verticalLine',
+                afterDraw: (chart) => {
+                    if (chart.tooltip && chart.tooltip.opacity !== 0) {
+                        const ctx = chart.ctx;
+                        const x = chart.tooltip.caretX;
+                        const topY = chart.scales.y.top;
+                        const bottomY = chart.scales.y.bottom;
+
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.moveTo(x, topY);
+                        ctx.lineTo(x, bottomY);
+                        ctx.lineWidth = 1;
+                        ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)'; // Customize the color and opacity as needed
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                }
+            };
+
+            // Register the plugin globally
+            Chart.register(verticalLinePlugin);
+
+            // 2. Function to create generic charts (Capacitive and Light Sensors)
+            function createChart(canvasId, label, data, backgroundColor, borderColor, yAxisLabel) {
+                const ctx = document.getElementById(canvasId).getContext('2d');
+
+                // Sort the data by timestamp in ascending order
+                data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+                return new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.map(entry => new Date(entry.created_at).toLocaleTimeString([], {
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: true
+                        })),
+                        datasets: [{
+                            label: label,
+                            data: data.map(entry => parseFloat(entry.value)),
+                            backgroundColor: backgroundColor,
+                            borderColor: borderColor,
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointRadius: 0, // Hide data points
+                            fill: false, // No fill under the line
+                            yAxisID: 'y'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        interaction: {
+                            mode: 'index', // Tooltip mode aligned with x-axis
+                            intersect: false // Tooltip appears when hovering anywhere on x-axis
+                        },
+                        plugins: {
+                            tooltip: {
+                                enabled: true,
+                                callbacks: {
+                                    title: function (context) {
+                                        // Display the full timestamp
+                                        return context[0].label;
+                                    },
+                                    label: function (context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            // Round the value to 2 decimal places
+                                            label += Math.round(context.parsed.y * 100) / 100;
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Timestamp'
+                                },
+                                ticks: {
+                                    maxRotation: 0,
+                                    minRotation: 0
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: yAxisLabel
+                                },
+                                beginAtZero: true
+                            }
                         }
+                    }
+                });
+            }
+
+            // 3. Function to create Temperature Sensor Chart with Correct Handling
+            function createTemperatureChart(data) {
+                const ctx = document.getElementById('temperatureSensorChart').getContext('2d');
+
+                // Prepare data
+                const labels = data.map(entry => new Date(entry.created_at).toLocaleTimeString([], {
+                    hour: 'numeric',
+                    minute: 'numeric',
+                    hour12: true
+                }));
+                const fahrenheitData = data.map(entry => parseFloat(entry.value));
+
+                // Convert Fahrenheit to Celsius if needed
+                const celsiusData = fahrenheitData.map(f => (f - 32) * 5 / 9);
+
+                const datasets = [];
+                const scalesConfig = {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Timestamp'
+                        },
+                        ticks: {
+                            maxRotation: 0,
+                            minRotation: 0
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Temperature (°F)'
+                        },
+                        beginAtZero: false
                     }
                 };
 
-                // Register the plugin globally
-                Chart.register(verticalLinePlugin);
-
-                // Function to create charts
-                function createChart(canvasId, label, data, backgroundColor, borderColor) {
-                    const ctx = document.getElementById(canvasId).getContext('2d');
-
-                    // Sort the data by timestamp in ascending order
-                    data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-
-                    return new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: data.map(entry => new Date(entry.created_at).toLocaleTimeString([], {
-                                hour: 'numeric',
-                                minute: 'numeric',
-                                hour12: true
-                            })),
-                            datasets: [{
-                                label: label,
-                                data: data.map(entry => parseFloat(entry.value)),
-                                backgroundColor: backgroundColor,
-                                borderColor: borderColor,
-                                borderWidth: 2,
-                                tension: 0.3,
-                                pointRadius: 0, // Hide data points
-                                fill: false // No fill under the line
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            interaction: {
-                                mode: 'index', // Tooltip mode aligned with x-axis
-                                intersect: false // Tooltip appears when hovering anywhere on x-axis
-                            },
-                            plugins: {
-                                tooltip: {
-                                    enabled: true,
-                                    callbacks: {
-                                        title: function(context) {
-                                            // Display the full timestamp
-                                            return context[0].label;
-                                        },
-                                        label: function(context) {
-                                            let label = context.dataset.label || '';
-                                            if (label) {
-                                                label += ': ';
-                                            }
-                                            if (context.parsed.y !== null) {
-                                                // Round the value to 2 decimal places
-                                                label += Math.round(context.parsed.y * 100) / 100;
-                                            }
-                                            return label;
-                                        }
-                                    }
-                                }
-                            },
-                            scales: {
-                                x: {
-                                    title: {
-                                        display: true,
-                                        text: 'Timestamp'
-                                    },
-                                    ticks: {
-                                        maxRotation: 0,
-                                        minRotation: 0
-                                    }
-                                },
-                                y: {
-                                    title: {
-                                        display: true,
-                                        text: label
-                                    },
-                                    beginAtZero: true
-                                }
-                            }
-                        }
+                if (temperatureUnit === 'Fahrenheit') {
+                    // Display only Fahrenheit
+                    datasets.push({
+                        label: 'Temperature (°F)',
+                        data: fahrenheitData,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        yAxisID: 'y',
+                        tension: 0.3,
+                        pointRadius: 0,
+                        fill: false
                     });
+                } else if (temperatureUnit === 'Celsius') {
+                    // Display only Celsius by converting Fahrenheit to Celsius
+                    datasets.push({
+                        label: 'Temperature (°C)',
+                        data: celsiusData,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        yAxisID: 'y',
+                        tension: 0.3,
+                        pointRadius: 0,
+                        fill: false
+                    });
+                    scalesConfig['y'].title.text = 'Temperature (°C)';
+                } else if (temperatureUnit === 'Both') {
+                    // Display both Fahrenheit and Celsius on the same Y-axis
+                    // To prevent overlapping, we'll convert Celsius to Fahrenheit for plotting on the same scale
+
+                    // Since data is already in Fahrenheit, we don't need to convert it again
+                    // Instead, we can plot both datasets on the same Y-axis by ensuring both are in Fahrenheit
+
+                    // Original Fahrenheit dataset
+                    datasets.push({
+                        label: 'Temperature (°F)',
+                        data: fahrenheitData,
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        yAxisID: 'y',
+                        tension: 0.3,
+                        pointRadius: 0,
+                        fill: false
+                    });
+
+                    // Converted Celsius dataset plotted as Fahrenheit
+                    // const celsiusAsFahrenheit = celsiusData.map(c => c * 9 / 5 + 32);
+                    datasets.push({
+                        label: 'Temperature (°C)',
+                        data: celsiusData,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        yAxisID: 'y',
+                        tension: 0.3,
+                        pointRadius: 0,
+                        fill: false
+                    });
+
+                    scalesConfig['y'].title.text = 'Temperature (°F) / Converted Temperature (°F)';
                 }
 
-                // Get the setup ID from the URL
-                const setupId = window.location.pathname.split('/').pop();
+                return new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: datasets
+                    },
+                    options: {
+                        responsive: true,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        plugins: {
+                            tooltip: {
+                                enabled: true,
+                                callbacks: {
+                                    title: function (context) {
+                                        return context[0].label;
+                                    },
+                                    label: function (context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            label += Math.round(context.parsed.y * 100) / 100;
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: scalesConfig
+                    }
+                });
+            }
 
-                // Fetch sensor data
+            // 4. Function to create Light Sensor Chart
+            function createLightChart(data) {
+                const ctx = document.getElementById('lightSensorChart').getContext('2d');
+
+                // Sort the data by timestamp in ascending order
+                data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+                return new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.map(entry => new Date(entry.created_at).toLocaleTimeString([], {
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: true
+                        })),
+                        datasets: [{
+                            label: 'Light (lux)',
+                            data: data.map(entry => parseFloat(entry.value)),
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointRadius: 0, // Hide data points
+                            fill: false // No fill under the line
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        interaction: {
+                            mode: 'index', // Tooltip mode aligned with x-axis
+                            intersect: false // Tooltip appears when hovering anywhere on x-axis
+                        },
+                        plugins: {
+                            tooltip: {
+                                enabled: true,
+                                callbacks: {
+                                    title: function (context) {
+                                        // Display the full timestamp
+                                        return context[0].label;
+                                    },
+                                    label: function (context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            // Round the value to 2 decimal places
+                                            label += Math.round(context.parsed.y * 100) / 100;
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Timestamp'
+                                },
+                                ticks: {
+                                    maxRotation: 0,
+                                    minRotation: 0
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Light (lux)'
+                                },
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 5. Fetch sensor data and create all charts
+            document.addEventListener('DOMContentLoaded', function () {
+                const setupId = "{{ setup.id }}"; // Get the setup_id from your Flask template context
+
                 fetch(`/api/sensor-data/${setupId}`)
                     .then(response => response.json())
                     .then(sensorData => {
@@ -267,36 +485,29 @@
                         console.log('Light Sensor Data:', sensorData.light);
 
                         // Create Capacitive Sensor Chart
-                        const capacitiveChart = createChart(
-                            'capacitiveSensorChart',
-                            'Capacitive Sensor',
-                            sensorData.capacitive,
-                            'rgba(75, 192, 192, 0.2)',
-                            'rgba(75, 192, 192, 1)'
-                        );
-
-                        // Create Temperature Sensor Chart (if data exists)
-                        if (sensorData.temperature) {
-                            const temperatureChart = createChart(
-                                'temperatureSensorChart',
-                                'Temperature (°F)',
-                                sensorData.temperature,
-                                'rgba(255, 99, 132, 0.2)',
-                                'rgba(255, 99, 132, 1)'
+                        if (sensorData.capacitive) {
+                            createChart(
+                                'capacitiveSensorChart',
+                                'Capacitive Sensor',
+                                sensorData.capacitive,
+                                'rgba(75, 192, 192, 0.2)',
+                                'rgba(75, 192, 192, 1)',
+                                'Capacitive Sensor Value'
                             );
+                        } else {
+                            console.log('Capacitive sensor data not found.');
+                        }
+
+                        // Create Temperature Sensor Chart
+                        if (sensorData.temperature) {
+                            createTemperatureChart(sensorData.temperature);
                         } else {
                             console.log('Temperature sensor data not found.');
                         }
 
-                        // Create Light Sensor Chart (if data exists)
+                        // Create Light Sensor Chart
                         if (sensorData.light) {
-                            const lightChart = createChart(
-                                'lightSensorChart',
-                                'Light (lux)',
-                                sensorData.light,
-                                'rgba(54, 162, 235, 0.2)',
-                                'rgba(54, 162, 235, 1)'
-                            );
+                            createLightChart(sensorData.light);
                         } else {
                             console.log('Light sensor data not found.');
                         }
@@ -305,69 +516,8 @@
                         console.error('Error fetching sensor data:', error);
                     });
 
-                // Auto Watering Toggle Functionality
-                function toggleAutoWater() {
-                    const setupId = "{{ setup.id }}"; // Get the setup_id from your Flask template context
-                    const status = document.getElementById('autoWaterToggle').checked ? 'true' : 'false';
-
-                    // Construct the URL for the POST request
-                    const url = `/toggle_auto_water/${setupId}`;
-
-                    // Send the POST request using fetch
-                    fetch(url, {
-                        method: 'POST',
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log('Auto Watering Status:', data.auto_water_enabled);
-                        // Change label based on the response
-                        const autoWaterStatusLabel = document.getElementById('autoWaterStatus');
-                        if (data.auto_water_enabled) {
-                            autoWaterStatusLabel.textContent = 'On';
-                        } else {
-                            autoWaterStatusLabel.textContent = 'Off';
-                        }
-                    })
-                    .catch((error) => {
-                        console.error('Error:', error);
-                        // Optionally show error to user
-                    });
-                }
-
-                // Event listener for the auto-water toggle
-                document.getElementById('autoWaterToggle').addEventListener('change', toggleAutoWater);
-
-                // Pump Control Functionality
-                function triggerPump(status) {
-                    const setupId = "{{ setup.id }}"; // Get the setup_id from your Flask template context    
-                    const url = `/trigger_pump/${setupId}/${status}`;
-
-                    // Send the POST request using fetch
-                    fetch(url, {
-                        method: 'POST',
-                    })
-                    .then(response => response.json())
-                    .catch((error) => {
-                        console.error('Error:', error);
-                    });
-                }
-
-                // Event listener for the pump toggle
-                document.getElementById('pumpToggle').addEventListener('change', function() {
-                    const status = this.checked ? 'true' : 'false';
-                    triggerPump(status); // Trigger the pump based on toggle state
-
-                    // Change the label text dynamically based on toggle state
-                    const pumpStatusLabel = document.getElementById('pumpStatus');
-                    if (this.checked) {
-                        pumpStatusLabel.textContent = 'On';  // Show "On" if checked
-                    } else {
-                        pumpStatusLabel.textContent = 'Off'; // Show "Off" if unchecked
-                    }
-                });
-
                 // Threshold Form Submission Debug
-                document.getElementById('thresholdForm').addEventListener('submit', function(e) {
+                document.getElementById('thresholdForm').addEventListener('submit', function (e) {
                     console.log('Form submitted');
                     e.preventDefault(); // Temporarily prevent submission
 
@@ -379,9 +529,9 @@
 
                     // Manually submit with fetch to see detailed network info
                     fetch(e.target.action, {
-                            method: 'POST',
-                            body: formData
-                        })
+                        method: 'POST',
+                        body: formData
+                    })
                         .then(response => {
                             console.log('Response status:', response.status);
                             return response.text();
@@ -395,10 +545,77 @@
                             console.error('Fetch error:', error);
                         });
                 });
-            </script>
-    
-    
+            });
 
+            // 6. Auto Watering Toggle Functionality
+            function toggleAutoWater() {
+                const setupId = "{{ setup.id }}"; // Get the setup_id from your Flask template context
+                const status = document.getElementById('autoWaterToggle').checked;
+
+                // Construct the URL for the POST request
+                const url = `/toggle_auto_water/${setupId}`;
+
+                // Send the POST request using fetch
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ auto_water_enabled: status })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Auto Watering Status:', data.auto_water_enabled);
+                        // Change label based on the response
+                        const autoWaterStatusLabel = document.getElementById('autoWaterStatus');
+                        autoWaterStatusLabel.textContent = data.auto_water_enabled ? 'On' : 'Off';
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                        // Optionally show error to user
+                    });
+            }
+
+            // Event listener for the auto-water toggle
+            document.getElementById('autoWaterToggle').addEventListener('change', toggleAutoWater);
+
+            // 7. Pump Control Functionality
+            function triggerPump(status) {
+                const setupId = "{{ setup.id }}"; // Get the setup_id from your Flask template context    
+                const url = `/trigger_pump/${setupId}/${status}`;
+
+                // Send the POST request using fetch
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ pump_status: status })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Pump Status:', data.pump_status);
+                        // Optionally handle response
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                        // Optionally show error to user
+                    });
+            }
+
+            // Event listener for the pump toggle
+            document.getElementById('pumpToggle').addEventListener('change', function () {
+                const status = this.checked ? 'true' : 'false';
+                triggerPump(status); // Trigger the pump based on toggle state
+
+                // Change the label text dynamically based on toggle state
+                const pumpStatusLabel = document.getElementById('pumpStatus');
+                pumpStatusLabel.textContent = this.checked ? 'On' : 'Off';
+            });
+        </script>
+    </div>
+
+    <!-- Ensure that all modals and additional elements are properly closed -->
 </body>
 
 </html>

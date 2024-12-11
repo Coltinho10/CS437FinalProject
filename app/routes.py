@@ -129,7 +129,8 @@ def init_routes(app, db, login_manager):
             temperature_sensor_key = form.temperature_sensor_key.data if form.temperature_sensor_key.data else None
             light_sensor_key = form.light_sensor_key.data if form.light_sensor_key.data else None
             mosfet_driver_key = form.mosfet_driver_key.data if form.mosfet_driver_key.data else None
-
+            temperature_unit =  form.temperature_unit.data if form.temperature_unit.data else None
+            
             try:
                 new_setup = SoilSensorSetup(
                     name=name,
@@ -138,7 +139,8 @@ def init_routes(app, db, login_manager):
                     temperature_sensor_key=temperature_sensor_key,
                     light_sensor_key=light_sensor_key,
                     mosfet_driver_key=mosfet_driver_key,
-                    image_url=image_url
+                    image_url=image_url,
+                    temperature_unit=temperature_unit
                 )
                 db.session.add(new_setup)
                 db.session.commit()
@@ -166,8 +168,9 @@ def init_routes(app, db, login_manager):
         if form.validate_on_submit():
             form.populate_obj(setup)
             try:
+                setup.temperature_unit = form.temperature_unit.data  # Add this line
                 db.session.commit()
-                flash('Setup updated successfully!', 'success')
+                flash('Setup updated successfully.', 'success')
                 return redirect(url_for('dashboard'))
             except IntegrityError:
                 db.session.rollback()
