@@ -44,25 +44,24 @@
 
     <header class="hero bg-primary text-white text-center py-5 position-relative vh-75">
         <div class="container position-relative" style="z-index: 1;">
-            <h1 class="display-2 fw-bold mb-4 animate__animated animate__fadeIn">Welcome to SoilSensor</h1>
-            <p class="lead fs-3 mb-5 animate__animated animate__fadeIn animate__delay-1s">
+            <h1 class="display-2 fw-bold mb-4 animate__animated animate__fadeIn" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Welcome to SoilSensor</h1>
+            <p class="lead fs-3 mb-5 animate__animated animate__fadeIn animate__delay-1s" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.5);"></p>
                 The smart IoT solution for automated plant care and monitoring.
                 <br>Track moisture levels, automate watering, and keep your plants thriving.
             </p>
             <div class="d-flex justify-content-center gap-3 animate__animated animate__fadeIn animate__delay-2s">
-                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-5 py-3 fw-bold hover-scale">
+                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-5 py-3 fw-bold hover-scale mb-4">
                     Get Started Now
                 </a>
-                <a href="#features" class="btn btn-outline-light btn-lg px-5 py-3 hover-scale">
+                <a href="#features" class="btn btn-outline-light btn-lg px-5 py-3 hover-scale mb-4">
                     Learn More
                 </a>
             </div>
         </div>
-        <div class="position-absolute top-0 start-0 w-100 h-100" style="z-index: 0;">
+        <div class="position-absolute top-0 start-0 w-100 h-100" style="background: rgba(0,0,0,0.4); z-index: 0;"></div>
+        <div class="position-absolute top-0 start-0 w-100 h-100" style="z-index: 0;"></div>
             <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.48/build/spline-viewer.js"></script>
-            <!-- <spline-viewer url="https://prod.spline.design/SYHBfHiU-Csu8q4r/scene.splinecode"></spline-viewer> -->
-            <spline-viewer url="https://prod.spline.design/SYHBfHiU-Csu8q4r/scene.splinecode" 
-                          style="height: 100%; width: 100%;"></spline-viewer>
+            <spline-viewer url="https://prod.spline.design/AQdqFHImKVc8HTgb/scene.splinecode" style="height: 100%; width: 100%;"></spline-viewer>
         </div>
     </header>
 
