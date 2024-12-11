@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
-<body>
+<body style="background-color: #CAFEF1;">
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
@@ -49,7 +49,7 @@
                 The smart IoT solution for automated plant care and monitoring.
                 <br>Track moisture levels, automate watering, and keep your plants thriving.
             </p>
-            <div class="d-flex justify-content-center gap-3 animate__animated animate__fadeIn animate__delay-2s">
+            <div class="d-flex justify-content-center gap-3 animate__animated animate__delay-2s">
                 <a href="{{ url_for('register') }}" class="btn btn-light btn-lg px-5 py-3 fw-bold hover-scale mb-4">
                     Get Started Now
                 </a>
@@ -92,13 +92,23 @@
         .animate__delay-2s {
             animation-delay: 1s;
         }
+        @keyframes fadeIn_spline {
+            from { opacity: 0; }
+            to { opacity: 1 }
+        }
+        spline-viewer {
+            opacity: 0;
+            animation: fadeIn_spline 1s ease-in;
+            animation-delay: 1.5s;
+            animation-fill-mode: forwards;
+        }
     </style></div>
 
 
-    <section class="py-5">
+<section class="position-relative py-1" style="z-index: 2;">
         <div class="container text-center">
             <!-- id to jump to this part of the page -->
-            <h2 class="mb-4" id="features">Features of SoilSensor</h2>
+            <h2 class="mb-4 position-relative py-2 px-4 fw-bold d-inline-block" id="features" style="color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); background-color: rgba(13, 110, 253, 0.85); border-radius: 8px;">Features of SoilSensor</h2>
             <div class="row">
                 <div class="col-md-4">
                     <div class="card mb-4 shadow-sm">
