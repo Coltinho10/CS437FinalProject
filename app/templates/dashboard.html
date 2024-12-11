@@ -74,7 +74,7 @@
                             <p class="card-text">
                                 <strong>Last Watered:</strong> {{ setup.last_watered.strftime('%Y-%m-%d') if setup.last_watered else 'Never' }}<br>
                                 <strong>Auto-Watering:</strong> {{ 'Enabled' if setup.auto_water_enabled else 'Disabled' }}<br>
-                                <strong>Number of Sensors:</strong> {{
+                                <strong>Number of Devices:</strong> {{
                                     (setup.capacitive_sensor_key is not none) +
                                     (setup.temperature_sensor_key is not none) +
                                     (setup.light_sensor_key is not none) +
