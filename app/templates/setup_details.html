@@ -123,225 +123,261 @@
             </div>
         </div>
 
-        <script>
-            // Debug Modal Initialization
-            document.addEventListener('DOMContentLoaded', function() {
-                console.log('Bootstrap modal script loaded');
-
-                // Verify modal functionality
-                var thresholdModal = new bootstrap.Modal(document.getElementById('setThresholdModal'));
-
-                // Add debug logging to modal events
-                document.getElementById('setThresholdModal').addEventListener('show.bs.modal', function() {
-                    console.log('Modal is about to be shown');
-                });
-
-                document.getElementById('setThresholdModal').addEventListener('shown.bs.modal', function() {
-                    console.log('Modal has been shown');
-                });
-            });
-
-            // Form Submission Debug
-            document.getElementById('thresholdForm').addEventListener('submit', function(e) {
-                console.log('Form submitted');
-                e.preventDefault(); // Temporarily prevent submission
-
-                // Log form data
-                const formData = new FormData(e.target);
-                for (let [key, value] of formData.entries()) {
-                    console.log(`${key}: ${value}`);
-                }
-
-                // Manually submit with fetch to see detailed network info
-                fetch(e.target.action, {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => {
-                        console.log('Response status:', response.status);
-                        return response.text();
-                    })
-                    .then(text => {
-                        console.log('Response text:', text);
-                        // Reload the page or update UI as needed
-                        window.location.reload();
-                    })
-                    .catch(error => {
-                        console.error('Fetch error:', error);
-                    });
-            });
-
-            function createChart(canvasId, label, data, backgroundColor, borderColor) {
-                const ctx = document.getElementById(canvasId).getContext('2d');
-            
-                // Sort the data by timestamp in ascending order
-                data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-            
-                return new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: data.map(entry => new Date(entry.created_at).toLocaleTimeString([], {
-                            hour: 'numeric',
-                            minute: 'numeric',
-                            hour12: true
-                        })),
-                        datasets: [{
-                            label: label,
-                            data: data.map(entry => parseFloat(entry.value)),
-                            backgroundColor: backgroundColor,
-                            borderColor: borderColor,
-                            borderWidth: 2,
-                            tension: 0.3,
-                            pointRadius: 0, // Hide data points
-                            fill: false // No fill under the line
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        interaction: {
-                            mode: 'index', // Tooltip mode aligned with x-axis
-                            intersect: false // Tooltip appears when hovering anywhere on x-axis
-                        },
-                        plugins: {
-                            tooltip: {
-                                enabled: true,
-                                callbacks: {
-                                    title: function(context) {
-                                        // Display the full timestamp
-                                        return context[0].label;
-                                    },
-                                    label: function(context) {
-                                        let label = context.dataset.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        if (context.parsed.y !== null) {
-                                            // Round the value to 2 decimal places
-                                            label += Math.round(context.parsed.y * 100) / 100;
-                                        }
-                                        return label;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Timestamp'
-                                },
-                                ticks: {
-                                    maxRotation: 0,
-                                    minRotation: 0
-                                }
-                            },
-                            y: {
-                                title: {
-                                    display: true,
-                                    text: label
-                                },
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            }
-            
-            // Get the setup ID from the URL
-            const setupId = window.location.pathname.split('/').pop();
-
-            // Fetch sensor data
-            fetch(`/api/sensor-data/${setupId}`)
-                .then(response => response.json())
-                .then(sensorData => {
-                    console.log('Capacitive Sensor Data:', sensorData.capacitive);
-                    console.log('Temperature Sensor Data:', sensorData.temperature);
-                    console.log('Light Sensor Data:', sensorData.light);
-
-                    // Create Capacitive Sensor Chart
-                    const capacitiveChart = createChart(
-                        'capacitiveSensorChart',
-                        'Capacitive Sensor',
-                        sensorData.capacitive,
-                        'rgba(75, 192, 192, 0.2)',
-                        'rgba(75, 192, 192, 1)'
-                    );
-
-                    // Create Temperature Sensor Chart (if data exists)
-                    if (sensorData.temperature) {
-                        const temperatureChart = createChart(
-                            'temperatureSensorChart',
-                            'Temperature (°F)',
-                            sensorData.temperature,
-                            'rgba(255, 99, 132, 0.2)',
-                            'rgba(255, 99, 132, 1)'
-                        );
-                    } else {
-                        console.log('Temperature sensor data not found.');
-                    }
-
-                    // Create Light Sensor Chart (if data exists)
-                    if (sensorData.light) {
-                        const lightChart = createChart(
-                            'lightSensorChart',
-                            'Light (lux)',
-                            sensorData.light,
-                            'rgba(54, 162, 235, 0.2)',
-                            'rgba(54, 162, 235, 1)'
-                        );
-                    } else {
-                        console.log('Light sensor data not found.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching sensor data:', error);
-                });
-        </script>
-    
-    <!--Pump Control-->
-    <div class="row">
-        <div class="col-md-6">
-            <label for="pumpToggle" class="form-label">Pump Control</label>
-            <!-- Bootstrap Toggle Switch -->
-            <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" id="pumpToggle">
-                <span id="pumpStatus" class="form-check-label">Off</span> <!-- Initial label is 'Off' -->
+        <div class="row">
+            <div class="col-md-6">
+                <label for="pumpToggle" class="form-label">Pump Control</label>
+                <!-- Bootstrap Toggle Switch -->
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="pumpToggle">
+                    <span id="pumpStatus" class="form-check-label">Off</span> <!-- Initial label is 'Off' -->
+                </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Add Modal and other elements here -->
-    
-    <script>
-        // Function to trigger the pump
-        function triggerPump(status) {
-            const setupId = "{{ setup.id }}"; // Get the setup_id from your Flask template context    
-            const url = `/trigger_pump/${setupId}/${status}`;
-    
-            // Send the POST request using fetch
-            fetch(url, {
-                method: 'POST',
-            })
-            .then(response => response.json())
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-        }
-    
-        // Event listener for the toggle switch
-        document.getElementById('pumpToggle').addEventListener('change', function() {
-            const status = this.checked ? 'true' : 'false';
-            triggerPump(status); // Trigger the pump based on toggle state
-    
-            // Change the label text dynamically based on toggle state
-            const pumpStatusLabel = document.getElementById('pumpStatus');
-            if (this.checked) {
-                pumpStatusLabel.textContent = 'On';  // Show "On" if checked
-            } else {
-                pumpStatusLabel.textContent = 'Off'; // Show "Off" if unchecked
-            }
-        });
-    </script>
+
+            <script>
+                // Register the custom vertical line plugin
+                const verticalLinePlugin = {
+                    id: 'verticalLine',
+                    afterDraw: (chart) => {
+                        if (chart.tooltip && chart.tooltip.opacity !== 0) {
+                            const ctx = chart.ctx;
+                            const x = chart.tooltip.caretX;
+                            const topY = chart.scales.y.top;
+                            const bottomY = chart.scales.y.bottom;
+
+                            ctx.save();
+                            ctx.beginPath();
+                            ctx.moveTo(x, topY);
+                            ctx.lineTo(x, bottomY);
+                            ctx.lineWidth = 1;
+                            ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)'; // Customize the color and opacity as needed
+                            ctx.stroke();
+                            ctx.restore();
+                        }
+                    }
+                };
+
+                // Register the plugin globally
+                Chart.register(verticalLinePlugin);
+
+                // Function to create charts
+                function createChart(canvasId, label, data, backgroundColor, borderColor) {
+                    const ctx = document.getElementById(canvasId).getContext('2d');
+
+                    // Sort the data by timestamp in ascending order
+                    data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+                    return new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.map(entry => new Date(entry.created_at).toLocaleTimeString([], {
+                                hour: 'numeric',
+                                minute: 'numeric',
+                                hour12: true
+                            })),
+                            datasets: [{
+                                label: label,
+                                data: data.map(entry => parseFloat(entry.value)),
+                                backgroundColor: backgroundColor,
+                                borderColor: borderColor,
+                                borderWidth: 2,
+                                tension: 0.3,
+                                pointRadius: 0, // Hide data points
+                                fill: false // No fill under the line
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            interaction: {
+                                mode: 'index', // Tooltip mode aligned with x-axis
+                                intersect: false // Tooltip appears when hovering anywhere on x-axis
+                            },
+                            plugins: {
+                                tooltip: {
+                                    enabled: true,
+                                    callbacks: {
+                                        title: function(context) {
+                                            // Display the full timestamp
+                                            return context[0].label;
+                                        },
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed.y !== null) {
+                                                // Round the value to 2 decimal places
+                                                label += Math.round(context.parsed.y * 100) / 100;
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Timestamp'
+                                    },
+                                    ticks: {
+                                        maxRotation: 0,
+                                        minRotation: 0
+                                    }
+                                },
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: label
+                                    },
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Get the setup ID from the URL
+                const setupId = window.location.pathname.split('/').pop();
+
+                // Fetch sensor data
+                fetch(`/api/sensor-data/${setupId}`)
+                    .then(response => response.json())
+                    .then(sensorData => {
+                        console.log('Capacitive Sensor Data:', sensorData.capacitive);
+                        console.log('Temperature Sensor Data:', sensorData.temperature);
+                        console.log('Light Sensor Data:', sensorData.light);
+
+                        // Create Capacitive Sensor Chart
+                        const capacitiveChart = createChart(
+                            'capacitiveSensorChart',
+                            'Capacitive Sensor',
+                            sensorData.capacitive,
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(75, 192, 192, 1)'
+                        );
+
+                        // Create Temperature Sensor Chart (if data exists)
+                        if (sensorData.temperature) {
+                            const temperatureChart = createChart(
+                                'temperatureSensorChart',
+                                'Temperature (°F)',
+                                sensorData.temperature,
+                                'rgba(255, 99, 132, 0.2)',
+                                'rgba(255, 99, 132, 1)'
+                            );
+                        } else {
+                            console.log('Temperature sensor data not found.');
+                        }
+
+                        // Create Light Sensor Chart (if data exists)
+                        if (sensorData.light) {
+                            const lightChart = createChart(
+                                'lightSensorChart',
+                                'Light (lux)',
+                                sensorData.light,
+                                'rgba(54, 162, 235, 0.2)',
+                                'rgba(54, 162, 235, 1)'
+                            );
+                        } else {
+                            console.log('Light sensor data not found.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching sensor data:', error);
+                    });
+
+                // Auto Watering Toggle Functionality
+                function toggleAutoWater() {
+                    const setupId = "{{ setup.id }}"; // Get the setup_id from your Flask template context
+                    const status = document.getElementById('autoWaterToggle').checked ? 'true' : 'false';
+
+                    // Construct the URL for the POST request
+                    const url = `/toggle_auto_water/${setupId}`;
+
+                    // Send the POST request using fetch
+                    fetch(url, {
+                        method: 'POST',
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Auto Watering Status:', data.auto_water_enabled);
+                        // Change label based on the response
+                        const autoWaterStatusLabel = document.getElementById('autoWaterStatus');
+                        if (data.auto_water_enabled) {
+                            autoWaterStatusLabel.textContent = 'On';
+                        } else {
+                            autoWaterStatusLabel.textContent = 'Off';
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                        // Optionally show error to user
+                    });
+                }
+
+                // Event listener for the auto-water toggle
+                document.getElementById('autoWaterToggle').addEventListener('change', toggleAutoWater);
+
+                // Pump Control Functionality
+                function triggerPump(status) {
+                    const setupId = "{{ setup.id }}"; // Get the setup_id from your Flask template context    
+                    const url = `/trigger_pump/${setupId}/${status}`;
+
+                    // Send the POST request using fetch
+                    fetch(url, {
+                        method: 'POST',
+                    })
+                    .then(response => response.json())
+                    .catch((error) => {
+                        console.error('Error:', error);
+                    });
+                }
+
+                // Event listener for the pump toggle
+                document.getElementById('pumpToggle').addEventListener('change', function() {
+                    const status = this.checked ? 'true' : 'false';
+                    triggerPump(status); // Trigger the pump based on toggle state
+
+                    // Change the label text dynamically based on toggle state
+                    const pumpStatusLabel = document.getElementById('pumpStatus');
+                    if (this.checked) {
+                        pumpStatusLabel.textContent = 'On';  // Show "On" if checked
+                    } else {
+                        pumpStatusLabel.textContent = 'Off'; // Show "Off" if unchecked
+                    }
+                });
+
+                // Threshold Form Submission Debug
+                document.getElementById('thresholdForm').addEventListener('submit', function(e) {
+                    console.log('Form submitted');
+                    e.preventDefault(); // Temporarily prevent submission
+
+                    // Log form data
+                    const formData = new FormData(e.target);
+                    for (let [key, value] of formData.entries()) {
+                        console.log(`${key}: ${value}`);
+                    }
+
+                    // Manually submit with fetch to see detailed network info
+                    fetch(e.target.action, {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => {
+                            console.log('Response status:', response.status);
+                            return response.text();
+                        })
+                        .then(text => {
+                            console.log('Response text:', text);
+                            // Reload the page or update UI as needed
+                            window.location.reload();
+                        })
+                        .catch(error => {
+                            console.error('Fetch error:', error);
+                        });
+                });
+            </script>
     
     
 
