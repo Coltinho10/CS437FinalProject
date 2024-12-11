@@ -7,3 +7,5 @@ flask-wtf
 requests
 plotly
 gunicorn
+email_validator
+Flask_migrate

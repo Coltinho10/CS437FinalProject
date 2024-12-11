@@ -1,29 +1,32 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from . import config
-from .routes import init_routes
-from .models import db, User
+from flask_migrate import Migrate
+from .config import Config
 
-# Initialize extensions
+db = SQLAlchemy()
 login_manager = LoginManager()
-
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
+migrate = Migrate()
 
 def create_app():
     app = Flask(__name__)
-    app.config.from_object(config.Config)
+    app.config.from_object(Config)
 
     db.init_app(app)
     login_manager.init_app(app)
-
-    # Initialize routes after app is created to avoid circular imports
-    init_routes(app, db, login_manager)
+    migrate.init_app(app, db)
 
     with app.app_context():
+        from . import models  
         print("Creating tables...")
         db.create_all()
+        
+    @login_manager.user_loader
+    def load_user(user_id):
+        from .models import User  
+        return User.query.get(int(user_id))
+
+    from .routes import init_routes
+    init_routes(app, db, login_manager)
 
     return app
