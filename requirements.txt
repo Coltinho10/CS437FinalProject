@@ -7,3 +7,5 @@ flask-wtf
 requests
 plotly
 gunicorn
+celery[redis]
+flower
