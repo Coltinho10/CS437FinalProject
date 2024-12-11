@@ -29,9 +29,18 @@ class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
 
+def not_masked_key(form, field):
+    if field.data:  # Only validate if data is provided
+        # Check if it's not just masked characters
+        if all(c == '*' for c in field.data):
+            raise ValidationError('Invalid API Key.')
+        # Check if it matches Adafruit IO key format
+        if not re.match(r'^aio_[A-Za-z0-9]{28}$', field.data):
+            raise ValidationError('Invalid Adafruit IO API Key format. Should start with "aio_" followed by 28 alphanumeric characters.')
+
 class UserProfileForm(FlaskForm):
     adafruit_username = StringField('Adafruit IO Username', validators=[Optional(), Length(max=50)])
-    adafruit_aio_key = PasswordField('Adafruit IO API Key', validators=[Optional(), Length(max=100)])
+    adafruit_aio_key = PasswordField('Adafruit IO API Key', validators=[Optional(), Length(max=100), not_masked_key])
     phone_number = StringField('Phone Number', validators=[Optional(), Length(max=10)])
     email = StringField('Email', validators=[Optional(), Email(), Length(max=120)])
     notification_preference = SelectField('Notification Preference', choices=[
