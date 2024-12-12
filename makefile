@@ -23,6 +23,16 @@ run:
 	@if [ ! -d "instance" ]; then mkdir instance; fi
 	. venv/bin/activate && python run.py
 
+# Run the celery worker
+.PHONY: celery_run
+celery_run:
+	. venv/bin/activate && celery -A run.celery worker --beat --loglevel=DEBUG
+
+# Run the celery flower
+.PHONY: celery_flower
+celery_flower:
+	. venv/bin/activate && celery -A run.celery flower
+
 # Clean up generated files
 .PHONY: clean
 clean:
@@ -40,8 +50,10 @@ export-data:
 .PHONY: help
 help:
 	@echo "Usage:"
-	@echo "  make setup       - Set up the virtual environment and install dependencies"
-	@echo "  make init-db     - Initialize the database"
-	@echo "  make run         - Run the Flask development server"
-	@echo "  make clean       - Remove generated files and clean the project"
-	@echo "  make export-data - Export data to CSV"
+	@echo "  make setup         - Set up the virtual environment and install dependencies"
+	@echo "  make init-db       - Initialize the database"
+	@echo "  make run           - Run the Flask development server"
+	@echo "  make celery_run    - Run the celery worker and scheduler"
+	@echo "  make celery_flower - Run flower to check tasks and scheduled tasks"
+	@echo "  make clean         - Remove generated files and clean the project"
+	@echo "  make export-data   - Export data to CSV"

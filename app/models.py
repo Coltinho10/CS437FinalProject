@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, SelectField
 from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, Optional
 import re
-from . import db
+from .extensions import db
 from flask_login import UserMixin
 
 class User(db.Model, UserMixin):

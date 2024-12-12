@@ -2,12 +2,15 @@ from flask import abort, render_template, request, jsonify, flash, redirect, url
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.security import check_password_hash, generate_password_hash
 from .models import User, SoilSensorSetup
-from .forms import RegistrationForm, LoginForm, UserProfileForm, EditSetupForm, AddSetupForm
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError, DataError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from .forms import RegistrationForm, LoginForm, UserProfileForm, AddSetupForm, EditSetupForm
+from .utils import get_sensor_data, exec_trigger_pump
 import requests
 import logging
 
-def init_routes(app, db, login_manager):
+# Define login_manager user_loader
+def init_routes(app, db, bp, login_manager):  # Accept db and login_manager as arguments
+    app.register_blueprint(bp)
     @app.route('/')
     def index():
         return render_template('index.html')
@@ -113,7 +116,6 @@ def init_routes(app, db, login_manager):
             form.temperature_sensor_key.choices = [('', 'Select a Temperature Sensor')] + temperature_choices
             form.light_sensor_key.choices = [('', 'Select a Light Sensor')] + light_choices
             form.mosfet_driver_key.choices = [('', 'Select a Mosfet Driver')] + mosfet_driver_choices
-
             
             app.logger.debug(f"Capacitive Sensors: {capacitive_choices}")
             app.logger.debug(f"Temperature Sensors: {temperature_choices}")
@@ -179,50 +181,7 @@ def init_routes(app, db, login_manager):
                 flash('Error updating setup. Please try again.', 'danger')
 
         return render_template('edit_setup.html', form=form, setup=setup)
-    
-    
-    # @app.route('/profile', methods=['GET', 'POST'])
-    # @login_required
-    # def profile():
-    #     form = UserProfileForm(obj=current_user)
-    #     #print(current_user)
-    #     #print(current_user.password_hash)
-    #     #if form.validate_on_submit():
-    #     #print("form.validate_on_submit")
-    #     #if check_password_hash(current_user.password_hash, form.current_password.data):
-    #     #print("check_password_hash is true")
-    #     if form.adafruit_username.data:
-    #         current_user.adafruit_username = form.adafruit_username.data
-    #     elif hasattr(current_user, 'adafruit_username'):
-    #         pass
-    #     if form.adafruit_aio_key.data:
-    #         current_user.adafruit_aio_key = form.adafruit_aio_key.data
-    #     elif hasattr(current_user, 'adafruit_aio_key'):
-    #         pass
-    #     #print(current_user.adafruit_username)
-    #     # Update user's password if provided
-    #     if form.new_password.data:
-    #         current_user.password_hash = generate_password_hash(form.new_password.data)
-    #     if form.phone_number.data:
-    #         current_user.phone_number = str(form.phone_number.data)
-    #     elif hasattr(current_user, 'phone_number'):
-    #         pass
-    #     if form.email.data:
-    #         current_user.email = str(form.email.data)
-    #     elif hasattr(current_user, 'email'):
-    #         pass
-    #     if form.notification_preference.data:
-    #         current_user.notification_preference = form.notification_preference.data
-    #     elif hasattr(current_user, 'notification_preference'):
-    #         pass
-    #     db.session.commit()
-    #     #print('profile updated success')
-    #     flash('Profile updated successfully!', 'success')
-    #     #return redirect(url_for('profile'))
-    #     #else:
-    #     #    flash('Incorrect current password.', 'error')
-    #     return render_template('profile.html', form=form)
-   
+        
     @app.route('/profile', methods=['GET', 'POST'])
     @login_required
     def profile():
@@ -318,52 +277,12 @@ def init_routes(app, db, login_manager):
 
     @app.route('/api/sensor-data/<int:setup_id>')
     @login_required
-    def get_sensor_data(setup_id):
+    def sensor_data(setup_id):
         setup = SoilSensorSetup.query.get_or_404(setup_id)
         if setup.user_id != current_user.id:
-            abort(403)  
-
+            abort(403)  # Unauthorized access
         
-        username = current_user.adafruit_username
-        aio_key = current_user.adafruit_aio_key
-        
-        base_url = f"https://io.adafruit.com/api/v2/{username}/feeds/"
-
-        
-        try:
-            capacitive_data = requests.get(
-                base_url + setup.capacitive_sensor_key + "/data",
-                headers={"X-AIO-Key": aio_key}
-            ).json() if setup.capacitive_sensor_key else None
-
-            temperature_data = requests.get(
-                base_url + setup.temperature_sensor_key + "/data",
-                headers={"X-AIO-Key": aio_key}
-            ).json() if setup.temperature_sensor_key else None
-
-            light_data = requests.get(
-                base_url + setup.light_sensor_key + "/data",
-                headers={"X-AIO-Key": aio_key}
-            ).json() if setup.light_sensor_key else None
-
-            mosfet_driver_data = requests.get(
-                base_url + setup.mosfet_driver_key + "/data",
-                headers={"X-AIO-Key": aio_key}
-            ).json() if setup.mosfet_driver_key else None
-
-        except requests.exceptions.RequestException as e:
-            logging.error(f"Error fetching sensor data: {e}")
-            return jsonify({"error": "Failed to fetch sensor data"}), 500
-
-        
-        sensor_data = {
-            'capacitive': capacitive_data,
-            'temperature': temperature_data,
-            'light': light_data,
-            'mosfet_driver': mosfet_driver_data,
-        }
-
-        return jsonify(sensor_data)
+        return get_sensor_data(setup_id, current_user.adafruit_username, current_user.adafruit_aio_key)
 
     @app.route('/set_threshold/<int:setup_id>', methods=['POST'])
     @login_required
@@ -397,13 +316,10 @@ def init_routes(app, db, login_manager):
         Toggles the auto_water_enabled column for the specified setup.
         """
         setup = SoilSensorSetup.query.get_or_404(setup_id)
-
         
         setup.auto_water_enabled = not setup.auto_water_enabled
-
         
         db.session.commit()
-
         
         return jsonify({'auto_water_enabled': setup.auto_water_enabled})
 
@@ -415,23 +331,10 @@ def init_routes(app, db, login_manager):
         Input can be 'true' or 'false'.
         """
         setup = SoilSensorSetup.query.get_or_404(setup_id)
-        username = current_user.adafruit_username
-        base_url = f"https://io.adafruit.com/api/v2/{username}/feeds/"
+        if setup.user_id != current_user.id:
+            abort(403)  # Unauthorized access
 
-        action = 1 if input.lower() == 'true' else 0
-
-        url = base_url + setup.mosfet_driver_key + "/data"
-        headers = {"X-AIO-Key": current_user.adafruit_aio_key}
-        payload = {"value": action}
-
-        try:
-            response = requests.post(url, headers=headers, json=payload)
-            response.raise_for_status()
-            return jsonify(response.json())
-        except requests.exceptions.RequestException as e:
-            logging.error(f"Error triggering pump: {e}")
-            return jsonify({"error": "Failed to trigger pump"}), 500
-
+        return exec_trigger_pump(setup_id, input, current_user.adafruit_username, current_user.adafruit_aio_key)
 
     @app.route('/logout')
     @login_required
