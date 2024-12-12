@@ -31,6 +31,7 @@ class SoilSensorSetup(db.Model):
     light_sensor_key = db.Column(db.String(100))
     mosfet_driver_key = db.Column(db.String(100))
     co2_sensor_key = db.Column(db.String(100))
+    battery_sensor_key = db.Column(db.String(100))
     capacitive_sensor_threshold = db.Column(db.String(100))
     auto_water_enabled = db.Column(db.Boolean, default=False, nullable=True)
     last_watered = db.Column(db.DateTime, nullable=True)

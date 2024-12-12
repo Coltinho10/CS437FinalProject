@@ -79,7 +79,8 @@
                                     (setup.temperature_sensor_key is not none) +
                                     (setup.light_sensor_key is not none) +
                                     (setup.mosfet_driver_key is not none) +
-                                    (setup.co2_sensor_key is not none)
+                                    (setup.co2_sensor_key is not none) +
+                                    (setup.battery_sensor_key is not none)
                                 }}
                             </p>
                             
@@ -186,6 +187,19 @@
                                     </select>
                                 {% endif %}
                                 {% for error in form.light_sensor_key.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="mb-3">
+                                {{ form.battery_sensor_key.label(class="form-label") }}
+                                {% if form.battery_sensor_key.choices|length > 1 %}
+                                    {{ form.battery_sensor_key(class="form-select") }}
+                                {% else %}
+                                    <select class="form-select" disabled>
+                                        <option>No Available Battery Sensor</option>
+                                    </select>
+                                {% endif %}
+                                {% for error in form.battery_sensor_key.errors %}
                                     <div class="text-danger">{{ error }}</div>
                                 {% endfor %}
                             </div>
