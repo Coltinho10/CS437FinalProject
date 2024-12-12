@@ -1,23 +1,19 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from . import config
-from .routes import init_routes, bp
+from .config import Config
+from .routes import init_routes
 from .models import db, User
 from .utils import make_celery
 
 from celery.schedules import crontab
+from flask_migrate import Migrate
+from .extensions import db, login_manager, migrate
 
-# Initialize extensions
-login_manager = LoginManager()
 
-@login_manager.user_loader
-def load_user(user_id):
-    return User.query.get(int(user_id))
-
-def create_app():
+def create_app(bp, login_manager):
     app = Flask(__name__)
-    app.config.from_object(config.Config)
+    app.config.from_object(Config)
 
     db.init_app(app)
     login_manager.init_app(app)
@@ -35,14 +31,21 @@ def create_app():
     }
 
     celery.conf.timezone = "UTC"
-
-    # Initialize routes after app is created to avoid circular imports
-    init_routes(app, db, bp, login_manager)
     
+    migrate.init_app(app, db)
+
     with app.app_context():
+        from . import models  
         print("Creating tables...")
         db.create_all()
+        
+    @login_manager.user_loader
+    def load_user(user_id):
+        from .models import User  
+        return User.query.get(int(user_id))
 
+    from .routes import init_routes
+    init_routes(app, db, bp, login_manager)
     
     celery.set_default()
     celery.autodiscover_tasks(["app.tasks"])

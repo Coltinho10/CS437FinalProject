@@ -20,6 +20,7 @@ init-db:
 # Run the Flask development server
 .PHONY: run
 run:
+	@if [ ! -d "instance" ]; then mkdir instance; fi
 	. venv/bin/activate && python run.py
 
 # Run the celery worker

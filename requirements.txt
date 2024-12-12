@@ -9,3 +9,5 @@ plotly
 gunicorn
 celery[redis]
 flower
+email_validator
+Flask_migrate

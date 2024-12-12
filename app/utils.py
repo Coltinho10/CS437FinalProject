@@ -2,7 +2,7 @@ import requests
 from celery import Celery, Task
 from .models import SoilSensorSetup
 from flask import current_app, jsonify, abort
-
+import logging
 
 def make_celery(app):
     celery = Celery(
@@ -28,16 +28,14 @@ def get_sensor_data(setup_id, adafruit_username, adafruit_aio_key):
         if not setup:
             raise ValueError(f"No setup found with ID {setup_id}")
 
-        # Construct the base URL for API calls
         base_url = f"https://io.adafruit.com/api/v2/{adafruit_username}/feeds/"
-
-        # Fetch data for each sensor using their keys from the setup
+        
         try:
             capacitive_data = requests.get(
                 base_url + setup.capacitive_sensor_key + "/data",
                 headers={"X-AIO-Key": adafruit_aio_key}
             ).json() if setup.capacitive_sensor_key else None
-            print(len(capacitive_data))
+
             temperature_data = requests.get(
                 base_url + setup.temperature_sensor_key + "/data",
                 headers={"X-AIO-Key": adafruit_aio_key}
@@ -48,17 +46,22 @@ def get_sensor_data(setup_id, adafruit_username, adafruit_aio_key):
                 headers={"X-AIO-Key": adafruit_aio_key}
             ).json() if setup.light_sensor_key else None
 
+            mosfet_driver_data = requests.get(
+                base_url + setup.mosfet_driver_key + "/data",
+                headers={"X-AIO-Key": adafruit_aio_key}
+            ).json() if setup.mosfet_driver_key else None
+
         except requests.exceptions.RequestException as e:
-            print(f"Error fetching sensor data: {e}")
+            logging.error(f"Error fetching sensor data: {e}")
             return jsonify({"error": "Failed to fetch sensor data"}), 500
 
-        # Prepare the sensor data dictionary
+        
         sensor_data = {
             'capacitive': capacitive_data,
             'temperature': temperature_data,
             'light': light_data,
+            'mosfet_driver': mosfet_driver_data,
         }
-
 
         return jsonify(sensor_data)
 
