@@ -82,6 +82,8 @@ def init_routes(app, db, bp, login_manager):  # Accept db and login_manager as a
                     used_keys.add(setup.light_sensor_key)
                 if setup.mosfet_driver_key:
                     used_keys.add(setup.mosfet_driver_key)
+                if setup.co2_sensor_key:
+                    used_keys.add(setup.co2_sensor_key)
 
             available_feeds = [feed for feed in feeds if feed['key'] not in used_keys]
 
@@ -89,6 +91,7 @@ def init_routes(app, db, bp, login_manager):  # Accept db and login_manager as a
             temperature_choices = []
             light_choices = []
             mosfet_driver_choices = []
+            co2_choices = []
 
             for feed in available_feeds:
                 wipper_info = feed.get('wipper_pin_info', {})
@@ -110,12 +113,15 @@ def init_routes(app, db, bp, login_manager):  # Accept db and login_manager as a
                     light_choices.append((feed['key'], feed['name']))
                 elif 'mosfet' in name:
                     mosfet_driver_choices.append((feed['key'], feed['name']))
+                elif 'co2' in name:
+                    co2_choices.append((feed['key'], feed['name']))    
                 if not feeds:
                     flash('No feeds available to assign.', 'warning')
             form.capacitive_sensor_key.choices = [('', 'Select a Capacitive Sensor')] + capacitive_choices
             form.temperature_sensor_key.choices = [('', 'Select a Temperature Sensor')] + temperature_choices
             form.light_sensor_key.choices = [('', 'Select a Light Sensor')] + light_choices
             form.mosfet_driver_key.choices = [('', 'Select a Mosfet Driver')] + mosfet_driver_choices
+            form.co2_sensor_key.choices = [('', 'Select a Mosfet Driver')] + co2_choices
             
             app.logger.debug(f"Capacitive Sensors: {capacitive_choices}")
             app.logger.debug(f"Temperature Sensors: {temperature_choices}")
@@ -133,6 +139,7 @@ def init_routes(app, db, bp, login_manager):  # Accept db and login_manager as a
             temperature_sensor_key = form.temperature_sensor_key.data if form.temperature_sensor_key.data else None
             light_sensor_key = form.light_sensor_key.data if form.light_sensor_key.data else None
             mosfet_driver_key = form.mosfet_driver_key.data if form.mosfet_driver_key.data else None
+            co2_sensor_key = form.co2_sensor_key.data if form.co2_sensor_key.data else None
             display_both_units = form.display_both_units.data if form.display_both_units.data else 'no'
             
             try:
@@ -143,6 +150,7 @@ def init_routes(app, db, bp, login_manager):  # Accept db and login_manager as a
                     temperature_sensor_key=temperature_sensor_key,
                     light_sensor_key=light_sensor_key,
                     mosfet_driver_key=mosfet_driver_key,
+                    co2_sensor_key=co2_sensor_key,
                     image_url=image_url,
                     display_both_units=display_both_units
                 )

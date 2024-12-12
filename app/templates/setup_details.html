@@ -81,15 +81,18 @@
             </div>
         </div>
 
-        <!-- Threshold Button and Light Sensor Chart -->
+        <!-- CO2 Sensor Chart, threshold Button and Light Sensor Chart -->
         <div class="row">
-            <!-- Set Threshold Button -->
-            <div class="col-md-6 mb-4">
-                <button type="button" class="btn btn-secondary" data-bs-toggle="modal"
-                    data-bs-target="#setThresholdModal">
-                    Set Threshold for Capacitive Sensor
-                </button>
+             <!-- CO2 Sensor Chart -->
+             <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header">CO2 Sensor</div>
+                    <div class="card-body">
+                        <canvas id="co2SensorChart"></canvas>
+                    </div>
+                </div>
             </div>
+
 
             <!-- Light Sensor Chart -->
             <div class="col-md-6 mb-4">
@@ -104,21 +107,25 @@
 
         <!-- Auto Watering Toggle -->
         <div class="row mb-4">
-            <div class="col-md-6">
+            <!-- Set Threshold Button -->
+            <div class="col">
+                <button type="button" class="btn btn-secondary" data-bs-toggle="modal"
+                    data-bs-target="#setThresholdModal">
+                    Set Threshold for Capacitive Sensor
+                </button>
+            </div>
+            <div class="col">
                 <label for="autoWaterToggle" class="form-label">Auto Watering</label>
                 <!-- Bootstrap Toggle Switch -->
                 <div class="form-check form-switch">
                     <input class="form-check-input" type="checkbox" id="autoWaterToggle" {{ 'checked' if
                         setup.auto_water_enabled else '' }}>
                     <span id="autoWaterStatus" class="form-check-label">{{ 'On' if setup.auto_water_enabled else 'Off'
-                        }}</span> <!-- Initial label -->
+                    }}</span> <!-- Initial label -->
                 </div>
             </div>
-        </div>
-
-        <!-- Pump Control Toggle -->
-        <div class="row mb-4">
-            <div class="col-md-6">
+            <!-- Pump Control Toggle -->
+            <div class="col">
                 <label for="pumpToggle" class="form-label">Pump Control</label>
                 <!-- Bootstrap Toggle Switch -->
                 <div class="form-check form-switch">
@@ -127,6 +134,8 @@
                 </div>
             </div>
         </div>
+
+
 
         <!-- Threshold Modal -->
         <div class="modal fade" id="setThresholdModal" tabindex="-1" aria-labelledby="setThresholdModalLabel"
@@ -466,16 +475,95 @@
                 });
             }
 
-            // 5. Fetch sensor data and create all charts
+            // 5. Function to create CO2 Sensor Chart
+            function createCO2Chart(data) {
+                const ctx = document.getElementById('co2SensorChart').getContext('2d');
+
+                // Sort the data by timestamp in ascending order
+                data.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+                return new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.map(entry => new Date(entry.created_at).toLocaleTimeString([], {
+                            hour: 'numeric',
+                            minute: 'numeric',
+                            hour12: true
+                        })),
+                        datasets: [{
+                            label: 'CO2 (ppm)',
+                            data: data.map(entry => parseFloat(entry.value)),
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 2,
+                            tension: 0.3,
+                            pointRadius: 0, // Hide data points
+                            fill: false // No fill under the line
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        interaction: {
+                            mode: 'index', // Tooltip mode aligned with x-axis
+                            intersect: false // Tooltip appears when hovering anywhere on x-axis
+                        },
+                        plugins: {
+                            tooltip: {
+                                enabled: true,
+                                callbacks: {
+                                    title: function (context) {
+                                        // Display the full timestamp
+                                        return context[0].label;
+                                    },
+                                    label: function (context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed.y !== null) {
+                                            // Round the value to 2 decimal places
+                                            label += Math.round(context.parsed.y * 100) / 100;
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Timestamp'
+                                },
+                                ticks: {
+                                    maxRotation: 0,
+                                    minRotation: 0
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'CO2 (ppm)'
+                                },
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 6. Fetch sensor data and create all charts
             document.addEventListener('DOMContentLoaded', function () {
                 const setupId = "{{ setup.id }}"; // Get the setup_id from your Flask template context
 
                 fetch(`/api/sensor-data/${setupId}`)
                     .then(response => response.json())
                     .then(sensorData => {
-                        console.log('Capacitive Sensor Data:', sensorData.capacitive);
-                        console.log('Temperature Sensor Data:', sensorData.temperature);
-                        console.log('Light Sensor Data:', sensorData.light);
+                        //console.log('Capacitive Sensor Data:', sensorData.capacitive);
+                        //console.log('Temperature Sensor Data:', sensorData.temperature);
+                        //console.log('Light Sensor Data:', sensorData.light);
+                        //console.log('CO2 Sensor Data:', sensorData.co2);
+                        //console.log('CO2 Sensor Data:', sensorData);
 
                         // Create Capacitive Sensor Chart
                         if (sensorData.capacitive) {
@@ -504,6 +592,13 @@
                         } else {
                             console.log('Light sensor data not found.');
                         }
+
+                        // Create CO2 Sensor Chart
+                        if (sensorData.co2) {
+                            createCO2Chart(sensorData.co2);
+                        } else {
+                            console.log('CO2 sensor data not found.');
+                        }
                     })
                     .catch(error => {
                         console.error('Error fetching sensor data:', error);
@@ -526,11 +621,11 @@
                         body: formData
                     })
                         .then(response => {
-                            console.log('Response status:', response.status);
+                            //console.log('Response status:', response.status);
                             return response.text();
                         })
                         .then(text => {
-                            console.log('Response text:', text);
+                            //console.log('Response text:', text);
                             // Reload the page or update UI as needed
                             window.location.reload();
                         })
@@ -540,7 +635,7 @@
                 });
             });
 
-            // 6. Auto Watering Toggle Functionality
+            // 7. Auto Watering Toggle Functionality
             function toggleAutoWater() {
                 const setupId = "{{ setup.id }}"; // Get the setup_id from your Flask template context
                 const status = document.getElementById('autoWaterToggle').checked;
@@ -572,7 +667,7 @@
             // Event listener for the auto-water toggle
             document.getElementById('autoWaterToggle').addEventListener('change', toggleAutoWater);
 
-            // 7. Pump Control Functionality
+            // 8. Pump Control Functionality
             function triggerPump(status) {
                 const setupId = "{{ setup.id }}"; // Get the setup_id from your Flask template context    
                 const url = `/trigger_pump/${setupId}/${status}`;

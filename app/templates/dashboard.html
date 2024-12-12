@@ -78,7 +78,8 @@
                                     (setup.capacitive_sensor_key is not none) +
                                     (setup.temperature_sensor_key is not none) +
                                     (setup.light_sensor_key is not none) +
-                                    (setup.mosfet_driver_key is not none)
+                                    (setup.mosfet_driver_key is not none) +
+                                    (setup.co2_sensor_key is not none)
                                 }}
                             </p>
                             
@@ -188,8 +189,19 @@
                                     <div class="text-danger">{{ error }}</div>
                                 {% endfor %}
                             </div>
-                            
-                            <!-- Select Mosfet Driver -->
+                            <div class="mb-3">
+                                {{ form.co2_sensor_key.label(class="form-label") }}
+                                {% if form.co2_sensor_key.choices|length > 1 %}
+                                    {{ form.co2_sensor_key(class="form-select") }}
+                                {% else %}
+                                    <select class="form-select" disabled>
+                                        <option>No Available Mosfet Drivers</option>
+                                    </select>
+                                {% endif %}
+                                {% for error in form.co2_sensor_key.errors %}
+                                    <div class="text-danger">{{ error }}</div>
+                                {% endfor %}
+                            </div>
                             <div class="mb-3">
                                 {{ form.mosfet_driver_key.label(class="form-label") }}
                                 {% if form.mosfet_driver_key.choices|length > 1 %}
