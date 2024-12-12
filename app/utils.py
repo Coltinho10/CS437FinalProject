@@ -51,6 +51,16 @@ def get_sensor_data(setup_id, adafruit_username, adafruit_aio_key):
                 headers={"X-AIO-Key": adafruit_aio_key}
             ).json() if setup.mosfet_driver_key else None
 
+            co2_data = requests.get(
+                base_url + setup.co2_sensor_key + "/data",
+                headers={"X-AIO-Key": adafruit_aio_key}
+            ).json() if setup.co2_sensor_key else None
+
+            battery_data = requests.get(
+                base_url + setup.battery_sensor_key + "/data",
+                headers={"X-AIO-Key": adafruit_aio_key}
+            ).json() if setup.battery_sensor_key else None
+
         except requests.exceptions.RequestException as e:
             logging.error(f"Error fetching sensor data: {e}")
             return jsonify({"error": "Failed to fetch sensor data"}), 500
@@ -61,6 +71,8 @@ def get_sensor_data(setup_id, adafruit_username, adafruit_aio_key):
             'temperature': temperature_data,
             'light': light_data,
             'mosfet_driver': mosfet_driver_data,
+            'co2': co2_data,
+            'battery': battery_data
         }
 
         return jsonify(sensor_data)
