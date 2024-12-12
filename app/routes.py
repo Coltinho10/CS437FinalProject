@@ -89,6 +89,8 @@ def init_routes(app, db, login_manager):
 
             for feed in available_feeds:
                 wipper_info = feed.get('wipper_pin_info', {})
+                if not wipper_info or feed.get("status") == 'offline':
+                    continue
                 app.logger.debug(f"Feed: {feed['name']}, Wipper Info: {wipper_info}")
                 
                 name = feed['name'].lower()
