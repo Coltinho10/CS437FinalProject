@@ -62,7 +62,7 @@ class EditSetupForm(FlaskForm):
     display_both_units = SelectField('Display both Celsius and Fahrenheit', choices=[('yes', 'Yes'), ('no', 'No')], default='no', validators=[DataRequired()])
     light_sensor_key = StringField('Light Sensor Key', validators=[Length(max=100)])
     mosfet_driver_key = StringField('Mosfet Driver Key', validators=[Length(max=100)])
-    co2_sensor_key = StringField('CO2 Sensor Key', validators=[Length(max=100)])
+    capacitive_sensor_threshold = StringField('Capacitive Sensor Threshold', validators=[Length(max=100)])
     co2_sensor_key = StringField('CO2 Sensor Key', validators=[Length(max=100)])
     battery_sensor_key = StringField('Battery Percentage Key', validators=[Length(max=100)])
     submit = SubmitField('Update Setup')
