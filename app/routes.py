@@ -126,7 +126,7 @@ def init_routes(app, db, bp, login_manager):  # Accept db and login_manager as a
             form.temperature_sensor_key.choices = [('', 'Select a Temperature Sensor')] + temperature_choices
             form.light_sensor_key.choices = [('', 'Select a Light Sensor')] + light_choices
             form.mosfet_driver_key.choices = [('', 'Select a Mosfet Driver')] + mosfet_driver_choices
-            form.co2_sensor_key.choices = [('', 'Select a Mosfet Driver')] + co2_choices
+            form.co2_sensor_key.choices = [('', 'Select a CO2 Sensor')] + co2_choices
             form.battery_sensor_key.choices = [('', 'Select a Battery Percentage Sensor')] + battery_choices
 
             
